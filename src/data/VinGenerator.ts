@@ -130,6 +130,14 @@ export class VinGenerator {
     return InvalidVinGenerator.classicFallbackZero5();
   }
 
+  static invalidClassic5Random(): string {
+    return InvalidVinGenerator.randomRepeatedDigit5();
+  }
+
+  static invalidRepeatedClassic(digit?: string): string {
+    return InvalidVinGenerator.repeatedClassic5(digit);
+  }
+
   static invalidShort(val = 'ABC'): string {
     return InvalidVinGenerator.malformedShort(val);
   }

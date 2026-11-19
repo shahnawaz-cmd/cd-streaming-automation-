@@ -44,14 +44,16 @@ export class ClassicDecodeHandler {
 
     if (outcome === 'MANUAL_YMMT_FALLBACK') {
       this.logger.warn(
-        "⚠️ Condition B Triggered: 'Update Your Vehicle Details' fallback form displayed."
+        "⚠️ Condition B Triggered: 'Update Your Vehicle Details' fallback form displayed (Manual YMMT mode)."
       );
       await expect(classicFallback.heading()).toBeVisible();
       await expect(classicFallback.getRecordsBtn()).toBeVisible();
       return 'MANUAL_YMMT_FALLBACK';
     }
 
-    this.logger.pass('✅ Condition A Succeeded: Classic VIN decoded successfully. CTA enabled.');
+    const cta = await header.getHealedCta();
+    await expect(cta).toBeEnabled();
+    this.logger.pass('✅ Condition A Succeeded: Classic VIN was accepted/decoded by server without error. CTA is enabled (Same as Case 2 decoded flow).');
     return 'DECODED';
   }
 }

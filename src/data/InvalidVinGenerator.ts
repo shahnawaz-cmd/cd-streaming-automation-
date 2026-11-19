@@ -62,13 +62,32 @@ export class InvalidVinGenerator {
   }
 
   /**
+   * Generates a 5-digit repeated invalid Classic VIN with a random digit from 0 to 9 on every run.
+   * If digit is omitted, picks a random digit from 0 to 9.
+   * Example: 5x '0' -> "00000", 5x '1' -> "11111", ..., 5x '9' -> "99999"
+   * Triggers Classic Fallback 2: "Update Your Vehicle Details" manual YMMT form
+   */
+  static repeatedClassic5(digit?: string): string {
+    const digits = '0123456789';
+    const singleDigit = digit ? digit.charAt(0) : digits.charAt(Math.floor(Math.random() * digits.length));
+    const vin = singleDigit.repeat(5);
+    logger.info(`Generated 5-digit Classic invalid VIN (${singleDigit} x5): ${vin}`);
+    return vin;
+  }
+
+  /**
+   * Generates random digit from 0-9 repeated 5 times on every run (e.g. "00000", "11111", "99999")
+   */
+  static randomRepeatedDigit5(): string {
+    return this.repeatedClassic5();
+  }
+
+  /**
    * Generates 5x '0' ("00000")
    * Triggers Classic Fallback 2: "Update Your Vehicle Details" manual YMMT form
    */
   static classicFallbackZero5(): string {
-    const vin = '0'.repeat(5);
-    logger.info(`Generated 5-char Classic Fallback VIN: ${vin}`);
-    return vin;
+    return this.repeatedClassic5('0');
   }
 
   /**

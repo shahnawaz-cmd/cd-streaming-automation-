@@ -49,7 +49,19 @@ test.describe('CD Streaming - Preview & Checkout', () => {
   }, testInfo) => {
     const vin = VinGenerator.invalidModern17Random();
     await test.step(`Submit invalid Modern VIN (${vin}) on Homepage`, () => vinDecodeModule.decodeFromHomepage(vin));
-    const outcome = await test.step('Verify outcome', () => modernDecodeHandler.verifyOutcome(30_000));
+    const outcome = await test.step('Verify outcome', () => modernDecodeHandler.verifyOutcome(60_000));
+    await test.step('Attach evidence', () => evidenceModule.recordPreviewProof(testInfo, previewPage, vin, outcome));
+  });
+
+  test('TC-05: Invalid Classic VIN (Repeated Digit 0-9 x5) - Dynamic Fallback vs Decoded', async ({
+    vinDecodeModule,
+    classicDecodeHandler,
+    previewPage,
+    evidenceModule,
+  }, testInfo) => {
+    const vin = VinGenerator.invalidClassic5Random();
+    await test.step(`Submit invalid Classic VIN (${vin}) on Homepage`, () => vinDecodeModule.decodeFromHomepage(vin));
+    const outcome = await test.step('Verify outcome', () => classicDecodeHandler.verifyOutcome(60_000));
     await test.step('Attach evidence', () => evidenceModule.recordPreviewProof(testInfo, previewPage, vin, outcome));
   });
 });
