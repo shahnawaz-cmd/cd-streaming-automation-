@@ -2,6 +2,8 @@ import { Locator, TestInfo } from '@playwright/test';
 import { PreviewPage } from '../pages/preview/PreviewPage';
 import { ModernDecodeOutcome } from './ModernDecodeHandler';
 import { ClassicDecodeOutcome } from './ClassicDecodeHandler';
+import { LocalizationValidationReport } from './LanguageValidator';
+import { SupportedLocale } from '../data/LocaleDictionary';
 import { Logger } from '../utils/Logger';
 
 export type AnyDecodeOutcome = ModernDecodeOutcome | ClassicDecodeOutcome;
@@ -249,5 +251,79 @@ export class EvidenceModule {
       contentType: 'application/json',
     });
     this.logger.info(`📄 Attached Modified Specs & URL telemetry for VIN: ${vin}`);
+  }
+
+  /**
+   * Captures localized Preview page validation report & telemetry in pure JSON (zero screenshot).
+   */
+  async recordLocalizedPreviewProof(
+    testInfo: TestInfo,
+    vin: string,
+    locale: SupportedLocale,
+    report: LocalizationValidationReport
+  ): Promise<void> {
+    const testPrefix = testInfo.title.slice(0, 5);
+
+    const payload = {
+      vin,
+      stage: 'LOCALIZED_PREVIEW',
+      selectedLanguage: locale.label,
+      languageCode: locale.code,
+      htmlLang: report.htmlLang,
+      url: report.url,
+      urlHasLocaleParam: report.urlHasLocaleParam,
+      capturedHeadings: report.capturedHeadings,
+      capturedPrimaryCta: report.capturedPrimaryCtaOrButtons,
+      matchedExpectedTerms: report.matchedExpectedTerms,
+      missingExpectedTerms: report.missingExpectedTerms,
+      englishCoreLeaks: report.englishCoreLeaks,
+      rawI18nKeysFound: report.rawI18nKeysFound,
+      contentSnippet: report.contentSnippet,
+      capturedAt: new Date().toISOString(),
+    };
+
+    await testInfo.attach(`${testPrefix}-Preview-Localized.json`, {
+      body: JSON.stringify(payload, null, 2),
+      contentType: 'application/json',
+    });
+    this.logger.info(`📄 Attached Localized Preview telemetry JSON for language: ${locale.label}`);
+  }
+
+  /**
+   * Captures localized Checkout page validation report & telemetry in pure JSON (zero screenshot).
+   */
+  async recordLocalizedCheckoutProof(
+    testInfo: TestInfo,
+    vin: string,
+    locale: SupportedLocale,
+    usedEmail: string,
+    report: LocalizationValidationReport
+  ): Promise<void> {
+    const testPrefix = testInfo.title.slice(0, 5);
+
+    const payload = {
+      vin,
+      stage: 'LOCALIZED_CHECKOUT',
+      selectedLanguage: locale.label,
+      languageCode: locale.code,
+      usedEmail,
+      htmlLang: report.htmlLang,
+      checkoutUrl: report.url,
+      urlHasLocaleParam: report.urlHasLocaleParam,
+      capturedHeadings: report.capturedHeadings,
+      capturedButtons: report.capturedPrimaryCtaOrButtons,
+      matchedExpectedTerms: report.matchedExpectedTerms,
+      missingExpectedTerms: report.missingExpectedTerms,
+      englishCoreLeaks: report.englishCoreLeaks,
+      rawI18nKeysFound: report.rawI18nKeysFound,
+      contentSnippet: report.contentSnippet,
+      capturedAt: new Date().toISOString(),
+    };
+
+    await testInfo.attach(`${testPrefix}-Checkout-Localized.json`, {
+      body: JSON.stringify(payload, null, 2),
+      contentType: 'application/json',
+    });
+    this.logger.info(`📄 Attached Localized Checkout telemetry JSON for language: ${locale.label}`);
   }
 }

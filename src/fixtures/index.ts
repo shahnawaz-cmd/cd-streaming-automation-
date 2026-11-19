@@ -9,6 +9,8 @@ import {
   ExitIntentModule,
   EditYmmModule,
   EditSpecsModule,
+  PreviewCheckoutModule,
+  LanguageModule,
 } from '../modules';
 
 export type EnterpriseFixtures = {
@@ -23,6 +25,8 @@ export type EnterpriseFixtures = {
   exitIntentModule: ExitIntentModule;
   editYmmModule: EditYmmModule;
   editSpecsModule: EditSpecsModule;
+  previewCheckoutModule: PreviewCheckoutModule;
+  languageModule: LanguageModule;
 };
 
 export const test = base.extend<EnterpriseFixtures>({
@@ -49,8 +53,8 @@ export const test = base.extend<EnterpriseFixtures>({
     await use(new CheckoutPage(page));
   },
 
-  vinDecodeModule: async ({ page, homePage, previewPage }, use) => {
-    await use(new VinDecodeModule(page, homePage, previewPage));
+  vinDecodeModule: async ({ page, homePage, previewPage, classicDecodeHandler, evidenceModule }, use) => {
+    await use(new VinDecodeModule(page, homePage, previewPage, classicDecodeHandler, evidenceModule));
   },
 
   flowDetectionModule: async ({ page }, use) => {
@@ -79,6 +83,19 @@ export const test = base.extend<EnterpriseFixtures>({
 
   editSpecsModule: async ({ previewPage }, use) => {
     await use(new EditSpecsModule(previewPage));
+  },
+
+  previewCheckoutModule: async ({ page, previewPage, checkoutPage }, use) => {
+    await use(new PreviewCheckoutModule(page, previewPage, checkoutPage));
+  },
+
+  languageModule: async (
+    { page, previewPage, checkoutPage, previewCheckoutModule, vinDecodeModule, evidenceModule },
+    use
+  ) => {
+    await use(
+      new LanguageModule(page, previewPage, checkoutPage, previewCheckoutModule, vinDecodeModule, evidenceModule)
+    );
   },
 });
 

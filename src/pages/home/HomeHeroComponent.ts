@@ -14,7 +14,9 @@ export class HomeHeroComponent {
 
   // Locators as arrow functions
   vinInput = (): Locator =>
-    this.page.locator('input[placeholder*="VIN" i], input[name*="vin" i], input[type="text"]').first();
+    this.page
+      .locator('input[name="vin"], input[placeholder*="VIN" i], input[placeholder*="NIV" i], input[placeholder*="FIN" i], form input[type="text"]')
+      .first();
 
   submitBtn = (): Locator =>
     this.page.locator('button:has-text("Decode Classic VIN"), form button[type="submit"], form button').first();
@@ -29,9 +31,10 @@ export class HomeHeroComponent {
     await this.healer.fill(
       'Homepage VIN Input',
       [
+        'input[name="vin"]',
         'input[placeholder*="VIN" i]',
         'input[name*="vin" i]',
-        { placeholder: /VIN/i },
+        { placeholder: /VIN|NIV|FIN/i },
         'form input[type="text"]',
       ],
       vin
@@ -58,12 +61,18 @@ export class HomeHeroComponent {
   async waitForPreviewRedirect(vin: string, timeout = 30_000): Promise<void> {
     if (this.page.url().includes('/preview')) return;
 
+    const getLocaleFallbackUrl = async (): Promise<string> => {
+      const lang = await this.page.getAttribute('html', 'lang').catch(() => 'en');
+      const localeQuery = lang && lang !== 'en' ? `&locale=${lang}` : '';
+      return `/preview?vin=${vin}${localeQuery}&wpPage=homepage&type=vhr`;
+    };
+
     try {
       await Promise.race([
         this.page.waitForURL(/\/preview/, { timeout }),
         this.page.waitForURL(/\/\?vin=/, { timeout: 4_000 }).then(async () => {
           if (!this.page.url().includes('/preview')) {
-            await this.page.goto(`/preview?vin=${vin}&wpPage=homepage&type=vhr`, {
+            await this.page.goto(await getLocaleFallbackUrl(), {
               waitUntil: 'domcontentloaded',
             });
           }
@@ -71,7 +80,7 @@ export class HomeHeroComponent {
       ]);
     } catch (_) {
       if (!this.page.url().includes('/preview')) {
-        await this.page.goto(`/preview?vin=${vin}&wpPage=homepage&type=vhr`, {
+        await this.page.goto(await getLocaleFallbackUrl(), {
           waitUntil: 'domcontentloaded',
         });
       }

@@ -6,3 +6,6 @@ export { ClassicDecodeHandler, ClassicDecodeOutcome } from './ClassicDecodeHandl
 export { ExitIntentModule } from './ExitIntentModule';
 export { EditYmmModule } from './EditYmmModule';
 export { EditSpecsModule } from './EditSpecsModule';
+export { LanguageModule } from './LanguageModule';
+export { LanguageValidator, LocalizationValidationReport } from './LanguageValidator';
+export { PreviewCheckoutModule, LocalizedDecodeOutcome } from './PreviewCheckoutModule';

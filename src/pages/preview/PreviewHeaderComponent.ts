@@ -28,6 +28,19 @@ export class PreviewHeaderComponent {
   vinBadge = (): Locator =>
     this.page.locator('[data-testid="vin-badge"], .vin-badge').first();
 
+  // Language-agnostic structural locators for localized Package & Delivery section
+  packageSection = (): Locator =>
+    this.page.locator('section:has(input[type="email"])').first();
+
+  packageAccessCta = (): Locator =>
+    this.packageSection().locator('button[aria-busy]').first();
+
+  deliveryAccordionBtn = (): Locator =>
+    this.packageSection().locator('button[aria-controls="pv-delivery"]').first();
+
+  deliveryEmailInput = (): Locator =>
+    this.packageSection().locator('input[type="email"]').first();
+
   /**
    * Resolves the Access Record CTA with autonomous self-healing.
    */
