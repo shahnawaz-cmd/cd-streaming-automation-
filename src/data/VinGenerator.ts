@@ -4,6 +4,7 @@ import { Logger } from '../utils/Logger';
 import { ClassicMappedVin } from './ClassicMappedVin';
 import { ClassicUnmappedVin } from './ClassicUnmappedVin';
 import { InvalidVinGenerator } from './InvalidVinGenerator';
+import { ShortVinGenerator } from './ShortVinGenerator';
 
 const logger = new Logger('VinGenerator');
 
@@ -141,6 +142,10 @@ export class VinGenerator {
   static invalidShort(val = 'ABC'): string {
     return InvalidVinGenerator.malformedShort(val);
   }
+
+  static shortInvalid(length?: number): string {
+    return ShortVinGenerator.generate(length);
+  }
 }
 
-export { ClassicMappedVin, ClassicUnmappedVin, InvalidVinGenerator };
+export { ClassicMappedVin, ClassicUnmappedVin, InvalidVinGenerator, ShortVinGenerator };

@@ -1,4 +1,4 @@
-export { VinGenerator, ClassicMappedVin, ClassicUnmappedVin, InvalidVinGenerator } from './VinGenerator';
+export { VinGenerator, ClassicMappedVin, ClassicUnmappedVin, InvalidVinGenerator, ShortVinGenerator } from './VinGenerator';
 export { EmailGenerator } from './EmailGenerator';
 export { SpecsGenerator, DynamicVehicleSpecs } from './SpecsGenerator';
 export {

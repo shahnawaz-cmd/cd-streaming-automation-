@@ -7,4 +7,5 @@ export { AuctionHistoryComponent } from './AuctionHistoryComponent';
 export { BuildSheetComponent } from './BuildSheetComponent';
 export { NotFoundFallbackComponent } from './NotFoundFallbackComponent';
 export { ClassicFallbackComponent } from './ClassicFallbackComponent';
+export { ShortVinErrorComponent } from './ShortVinErrorComponent';
 export { PlansComponent } from './PlansComponent';

@@ -58,4 +58,10 @@ test.describe('CD Streaming - Preview & Checkout', () => {
     const { usedEmail } = await test.step('Navigate Preview -> Checkout via Access CTA', () => languageModule.proceedToCheckout());
     await test.step('Validate Checkout localization & attach JSON', () => languageModule.verifyAndRecordCheckoutLocalized(testInfo, vin, locale, usedEmail));
   });
+
+  test('TC-09: Short Invalid VIN (< 5 chars A-Z / 1-9 via Direct URL) - Error banner & disabled checkout guard', async ({ vinDecodeModule, shortVinHandler }, testInfo) => {
+    const vin = VinGenerator.shortInvalid();
+    await test.step(`Open Preview directly with short VIN (${vin})`, () => vinDecodeModule.decodeDirectly(vin));
+    await test.step('Validate short VIN rejection, disabled CTA & attach proof', () => shortVinHandler.verifyAndRecordProof(testInfo, vin));
+  });
 });

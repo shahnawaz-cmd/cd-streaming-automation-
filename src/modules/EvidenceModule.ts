@@ -3,6 +3,7 @@ import { PreviewPage } from '../pages/preview/PreviewPage';
 import { ModernDecodeOutcome } from './ModernDecodeHandler';
 import { ClassicDecodeOutcome } from './ClassicDecodeHandler';
 import { LocalizationValidationReport } from './LanguageValidator';
+import type { ShortVinValidationResult } from './ShortVinHandler';
 import { SupportedLocale } from '../data/LocaleDictionary';
 import { Logger } from '../utils/Logger';
 
@@ -325,5 +326,34 @@ export class EvidenceModule {
       contentType: 'application/json',
     });
     this.logger.info(`📄 Attached Localized Checkout telemetry JSON for language: ${locale.label}`);
+  }
+
+  /**
+   * Captures screenshot and structured JSON telemetry for malformed short VIN (< 5 chars) rejection.
+   */
+  async recordShortVinErrorProof(
+    testInfo: TestInfo,
+    previewPage: PreviewPage,
+    result: ShortVinValidationResult
+  ): Promise<void> {
+    const testPrefix = testInfo.title.slice(0, 5);
+
+    await this.captureElement(
+      testInfo,
+      previewPage.shortVinError.container(),
+      `${testPrefix}-Short-VIN-Error`
+    );
+
+    const payload = {
+      ...result,
+      outcome: 'SHORT_VIN_INVALID',
+      capturedAt: new Date().toISOString(),
+    };
+
+    await testInfo.attach(`${testPrefix}-Short-VIN-Proof.json`, {
+      body: JSON.stringify(payload, null, 2),
+      contentType: 'application/json',
+    });
+    this.logger.info(`📄 Attached Short VIN Error telemetry JSON for VIN: ${result.vin}`);
   }
 }

@@ -8,6 +8,7 @@ import { AuctionHistoryComponent } from './AuctionHistoryComponent';
 import { BuildSheetComponent } from './BuildSheetComponent';
 import { NotFoundFallbackComponent } from './NotFoundFallbackComponent';
 import { ClassicFallbackComponent } from './ClassicFallbackComponent';
+import { ShortVinErrorComponent } from './ShortVinErrorComponent';
 import { PlansComponent } from './PlansComponent';
 
 export type PreviewType = 'vhr' | 'sticker';
@@ -26,6 +27,7 @@ export class PreviewPage extends BasePage {
   readonly buildSheet: BuildSheetComponent;
   readonly notFound: NotFoundFallbackComponent;
   readonly classicFallback: ClassicFallbackComponent;
+  readonly shortVinError: ShortVinErrorComponent;
   readonly plans: PlansComponent;
 
   constructor(page: Page) {
@@ -38,6 +40,7 @@ export class PreviewPage extends BasePage {
     this.buildSheet = new BuildSheetComponent(page);
     this.notFound = new NotFoundFallbackComponent(page);
     this.classicFallback = new ClassicFallbackComponent(page);
+    this.shortVinError = new ShortVinErrorComponent(page);
     this.plans = new PlansComponent(page);
   }
 

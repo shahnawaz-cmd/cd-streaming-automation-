@@ -11,6 +11,7 @@ import {
   EditSpecsModule,
   PreviewCheckoutModule,
   LanguageModule,
+  ShortVinHandler,
 } from '../modules';
 
 export type EnterpriseFixtures = {
@@ -27,6 +28,7 @@ export type EnterpriseFixtures = {
   editSpecsModule: EditSpecsModule;
   previewCheckoutModule: PreviewCheckoutModule;
   languageModule: LanguageModule;
+  shortVinHandler: ShortVinHandler;
 };
 
 export const test = base.extend<EnterpriseFixtures>({
@@ -96,6 +98,10 @@ export const test = base.extend<EnterpriseFixtures>({
     await use(
       new LanguageModule(page, previewPage, checkoutPage, previewCheckoutModule, vinDecodeModule, evidenceModule)
     );
+  },
+
+  shortVinHandler: async ({ previewPage, evidenceModule }, use) => {
+    await use(new ShortVinHandler(previewPage, evidenceModule));
   },
 });
 
