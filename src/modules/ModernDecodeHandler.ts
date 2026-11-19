@@ -45,7 +45,7 @@ export class ModernDecodeHandler {
 
     if (outcome === 'NOT_FOUND_FALLBACK') {
       this.logger.warn(
-        "⚠️ Condition B Triggered: 'We couldn't find a vehicle for this VIN' banner displayed."
+        "⚠️ Condition B Triggered: 'We couldn't find a vehicle for this VIN' banner displayed. CTA remains disabled (Fallback mode)."
       );
       await expect(notFound.heading()).toBeVisible();
       const cta = await header.getHealedCta();
@@ -53,7 +53,9 @@ export class ModernDecodeHandler {
       return 'NOT_FOUND_FALLBACK';
     }
 
-    this.logger.pass('✅ Condition A Succeeded: Modern VIN decoded successfully. CTA enabled.');
+    const cta = await header.getHealedCta();
+    await expect(cta).toBeEnabled();
+    this.logger.pass('✅ Condition A Succeeded: VIN was accepted/decoded by server without error. CTA is enabled (Same as Case 1 decoded flow).');
     return 'DECODED';
   }
 }

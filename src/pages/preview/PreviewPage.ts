@@ -45,7 +45,7 @@ export class PreviewPage extends BasePage {
 
   // Delegated conveniences
   accessRecordCta = (): Locator => this.header.accessRecordCta();
-  decodingIndicator = (): Locator => this.header.decodingIndicator();
+  decodingIndicator = (): Locator => this.header.loadingSpinner();
   vehicleTitle = (): Locator => this.header.vehicleTitle();
 
   async getHealedCta(timeoutMs = 30_000): Promise<Locator> {

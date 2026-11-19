@@ -3,6 +3,7 @@ import * as path from 'path';
 import { Logger } from '../utils/Logger';
 import { ClassicMappedVin } from './ClassicMappedVin';
 import { ClassicUnmappedVin } from './ClassicUnmappedVin';
+import { InvalidVinGenerator } from './InvalidVinGenerator';
 
 const logger = new Logger('VinGenerator');
 
@@ -103,6 +104,35 @@ export class VinGenerator {
   static classicUnmapped(): string {
     return ClassicUnmappedVin.generate();
   }
+
+  // Delegated Invalid & Fallback Generators
+  static invalidModern17Random(): string {
+    return InvalidVinGenerator.randomRepeatedLetter17();
+  }
+
+  static invalidRandomLetters17(): string {
+    return InvalidVinGenerator.randomLetters17();
+  }
+
+  static invalidModern17A(): string {
+    return InvalidVinGenerator.modern17A();
+  }
+
+  static invalidModern17B(): string {
+    return InvalidVinGenerator.modern17B();
+  }
+
+  static invalidRepeatedModern(char?: string): string {
+    return InvalidVinGenerator.repeatedModern17(char);
+  }
+
+  static invalidClassic00000(): string {
+    return InvalidVinGenerator.classicFallbackZero5();
+  }
+
+  static invalidShort(val = 'ABC'): string {
+    return InvalidVinGenerator.malformedShort(val);
+  }
 }
 
-export { ClassicMappedVin, ClassicUnmappedVin };
+export { ClassicMappedVin, ClassicUnmappedVin, InvalidVinGenerator };

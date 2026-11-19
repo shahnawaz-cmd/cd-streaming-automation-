@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
-import { HomePage } from '../pages/HomePage';
-import { PreviewPage, PreviewType } from '../pages/PreviewPage';
+import { HomePage } from '../pages/home';
+import { PreviewPage, PreviewType } from '../pages/preview';
 import { Logger } from '../utils/Logger';
 
 /**
