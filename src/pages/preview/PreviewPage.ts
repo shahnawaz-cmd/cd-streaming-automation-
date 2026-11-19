@@ -2,6 +2,7 @@ import { Page, Locator } from '@playwright/test';
 import { BasePage } from '../BasePage';
 import { PreviewHeaderComponent } from './PreviewHeaderComponent';
 import { EditYmmModalComponent } from './EditYmmModalComponent';
+import { EditSpecsModalComponent } from './EditSpecsModalComponent';
 import { ExitIntentModalComponent } from './ExitIntentModalComponent';
 import { AuctionHistoryComponent } from './AuctionHistoryComponent';
 import { BuildSheetComponent } from './BuildSheetComponent';
@@ -19,6 +20,7 @@ export class PreviewPage extends BasePage {
   // Modular Sub-Components
   readonly header: PreviewHeaderComponent;
   readonly editYmm: EditYmmModalComponent;
+  readonly editSpecs: EditSpecsModalComponent;
   readonly exitIntent: ExitIntentModalComponent;
   readonly auctionHistory: AuctionHistoryComponent;
   readonly buildSheet: BuildSheetComponent;
@@ -30,6 +32,7 @@ export class PreviewPage extends BasePage {
     super(page);
     this.header = new PreviewHeaderComponent(page);
     this.editYmm = new EditYmmModalComponent(page);
+    this.editSpecs = new EditSpecsModalComponent(page);
     this.exitIntent = new ExitIntentModalComponent(page);
     this.auctionHistory = new AuctionHistoryComponent(page);
     this.buildSheet = new BuildSheetComponent(page);

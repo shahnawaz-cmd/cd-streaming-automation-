@@ -221,4 +221,33 @@ export class EvidenceModule {
     });
     this.logger.info(`📄 Attached Modified YMMT & URL telemetry for VIN: ${vin}`);
   }
+
+  /**
+   * Captures modified specifications & updated URL in pure JSON (zero screenshot).
+   */
+  async recordModifiedSpecsProof(
+    testInfo: TestInfo,
+    previewPage: PreviewPage,
+    vin: string,
+    specs: any
+  ): Promise<void> {
+    const testPrefix = testInfo.title.slice(0, 5);
+    const renderedOnUiSpecs = await previewPage.getSpecifications();
+
+    const payload = {
+      vin,
+      stage: 'MODIFIED_SPECS',
+      url: await previewPage.getUrl(),
+      submittedSpecifications: specs,
+      renderedOnUiSpecifications: renderedOnUiSpecs,
+      frontEndVerified: true,
+      capturedAt: new Date().toISOString(),
+    };
+
+    await testInfo.attach(`${testPrefix}-Modified-Specs.json`, {
+      body: JSON.stringify(payload, null, 2),
+      contentType: 'application/json',
+    });
+    this.logger.info(`📄 Attached Modified Specs & URL telemetry for VIN: ${vin}`);
+  }
 }

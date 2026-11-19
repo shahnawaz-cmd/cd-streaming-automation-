@@ -13,6 +13,10 @@ export abstract class BasePage {
     this.healer = new SelfHealingAgent(page);
   }
 
+  getPage(): Page {
+    return this.page;
+  }
+
   async navigate(path: string = '/'): Promise<void> {
     await this.page.goto(path, { waitUntil: 'domcontentloaded' });
   }

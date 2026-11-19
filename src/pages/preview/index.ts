@@ -1,6 +1,7 @@
 export { PreviewPage, PreviewType } from './PreviewPage';
 export { PreviewHeaderComponent } from './PreviewHeaderComponent';
 export { EditYmmModalComponent } from './EditYmmModalComponent';
+export { EditSpecsModalComponent } from './EditSpecsModalComponent';
 export { ExitIntentModalComponent } from './ExitIntentModalComponent';
 export { AuctionHistoryComponent } from './AuctionHistoryComponent';
 export { BuildSheetComponent } from './BuildSheetComponent';

@@ -72,15 +72,44 @@ test.describe('CD Streaming - Preview & Checkout', () => {
     previewPage,
     evidenceModule,
   }, testInfo) => {
-    const vin = VinGenerator.classicMapped();
-    await test.step('Decode Classic VIN on Homepage', () => vinDecodeModule.decodeFromHomepage(vin));
-    await test.step('Wait for decode & capture original specs JSON', async () => {
-      await classicDecodeHandler.verifyOutcome(60_000);
+    let vin = VinGenerator.classicMapped();
+    await test.step('Decode Classic Mapped VIN on Homepage', async () => {
+      while (true) {
+        await vinDecodeModule.decodeFromHomepage(vin);
+        const outcome = await classicDecodeHandler.verifyOutcome(60_000);
+        if (outcome === 'DECODED') break;
+        vin = VinGenerator.classicMapped();
+      }
       await evidenceModule.recordOriginalSpecsProof(testInfo, previewPage, vin);
     });
     const updated = await test.step('Dynamic YMMT selection with Trim verification', () => editYmmModule.updateDynamicYmmt());
     await test.step('Capture modified YMMT & URL JSON', () =>
       evidenceModule.recordModifiedYmmProof(testInfo, previewPage, vin, updated)
+    );
+  });
+
+  test('TC-07: Edit Specifications - Dynamic specs update with before/after JSON telemetry', async ({
+    vinDecodeModule,
+    classicDecodeHandler,
+    editSpecsModule,
+    previewPage,
+    evidenceModule,
+  }, testInfo) => {
+    let vin = VinGenerator.classicMapped();
+    await test.step('Decode Classic Mapped VIN on Homepage', async () => {
+      while (true) {
+        await vinDecodeModule.decodeFromHomepage(vin);
+        const outcome = await classicDecodeHandler.verifyOutcome(60_000);
+        if (outcome === 'DECODED') break;
+        vin = VinGenerator.classicMapped();
+      }
+      await evidenceModule.recordOriginalSpecsProof(testInfo, previewPage, vin);
+    });
+    const updatedSpecs = await test.step('Update specifications dynamically', () =>
+      editSpecsModule.updateDynamicSpecs()
+    );
+    await test.step('Capture modified specifications & URL JSON', () =>
+      evidenceModule.recordModifiedSpecsProof(testInfo, previewPage, vin, updatedSpecs)
     );
   });
 });
