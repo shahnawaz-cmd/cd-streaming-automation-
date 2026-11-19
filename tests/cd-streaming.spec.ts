@@ -64,4 +64,23 @@ test.describe('CD Streaming - Preview & Checkout', () => {
     const outcome = await test.step('Verify outcome', () => classicDecodeHandler.verifyOutcome(60_000));
     await test.step('Attach evidence', () => evidenceModule.recordPreviewProof(testInfo, previewPage, vin, outcome));
   });
+
+  test('TC-06: Edit YMM - Dynamic selection with Trim field verification', async ({
+    vinDecodeModule,
+    classicDecodeHandler,
+    editYmmModule,
+    previewPage,
+    evidenceModule,
+  }, testInfo) => {
+    const vin = VinGenerator.classicMapped();
+    await test.step('Decode Classic VIN on Homepage', () => vinDecodeModule.decodeFromHomepage(vin));
+    await test.step('Wait for decode & capture original specs JSON', async () => {
+      await classicDecodeHandler.verifyOutcome(60_000);
+      await evidenceModule.recordOriginalSpecsProof(testInfo, previewPage, vin);
+    });
+    const updated = await test.step('Dynamic YMMT selection with Trim verification', () => editYmmModule.updateDynamicYmmt());
+    await test.step('Capture modified YMMT & URL JSON', () =>
+      evidenceModule.recordModifiedYmmProof(testInfo, previewPage, vin, updated)
+    );
+  });
 });

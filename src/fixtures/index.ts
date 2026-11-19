@@ -7,6 +7,7 @@ import {
   ModernDecodeHandler,
   ClassicDecodeHandler,
   ExitIntentModule,
+  EditYmmModule,
 } from '../modules';
 
 export type EnterpriseFixtures = {
@@ -19,6 +20,7 @@ export type EnterpriseFixtures = {
   modernDecodeHandler: ModernDecodeHandler;
   classicDecodeHandler: ClassicDecodeHandler;
   exitIntentModule: ExitIntentModule;
+  editYmmModule: EditYmmModule;
 };
 
 export const test = base.extend<EnterpriseFixtures>({
@@ -67,6 +69,10 @@ export const test = base.extend<EnterpriseFixtures>({
 
   exitIntentModule: async ({ page, previewPage }, use) => {
     await use(new ExitIntentModule(page, previewPage));
+  },
+
+  editYmmModule: async ({ previewPage }, use) => {
+    await use(new EditYmmModule(previewPage));
   },
 });
 

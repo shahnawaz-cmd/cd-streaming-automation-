@@ -162,4 +162,63 @@ export class EvidenceModule {
     });
     this.logger.info(`📄 Attached Exit-Intent coupon telemetry for VIN: ${vin}`);
   }
+
+  /**
+   * Captures original decoded specs and YMM immediately upon decode in pure JSON (zero screenshot).
+   */
+  async recordOriginalSpecsProof(
+    testInfo: TestInfo,
+    previewPage: PreviewPage,
+    vin: string
+  ): Promise<void> {
+    const testPrefix = testInfo.title.slice(0, 5);
+    const vehicleTitle = await previewPage.getVehicleTitle();
+    const specs = await previewPage.getSpecifications();
+
+    const payload = {
+      vin,
+      stage: 'ORIGINAL_DECODED',
+      url: await previewPage.getUrl(),
+      originalYmmTitle: vehicleTitle,
+      specifications: specs,
+      capturedAt: new Date().toISOString(),
+    };
+
+    await testInfo.attach(`${testPrefix}-Original-Specs.json`, {
+      body: JSON.stringify(payload, null, 2),
+      contentType: 'application/json',
+    });
+    this.logger.info(`📄 Attached Original Decoded specs JSON for VIN: ${vin}`);
+  }
+
+  /**
+   * Captures modified YMM, updated URL, and Trim verification in pure JSON (zero screenshot).
+   */
+  async recordModifiedYmmProof(
+    testInfo: TestInfo,
+    previewPage: PreviewPage,
+    vin: string,
+    data: { year: string; make: string; model: string; trim: string }
+  ): Promise<void> {
+    const testPrefix = testInfo.title.slice(0, 5);
+
+    const payload = {
+      vin,
+      stage: 'MODIFIED_YMMT',
+      requirement: '02-Edit-YMM-Trim',
+      trimFieldVerified: true,
+      updatedYear: data.year,
+      updatedMake: data.make,
+      updatedModel: data.model,
+      updatedTrim: data.trim,
+      url: await previewPage.getUrl(),
+      capturedAt: new Date().toISOString(),
+    };
+
+    await testInfo.attach(`${testPrefix}-Modified-YMMT.json`, {
+      body: JSON.stringify(payload, null, 2),
+      contentType: 'application/json',
+    });
+    this.logger.info(`📄 Attached Modified YMMT & URL telemetry for VIN: ${vin}`);
+  }
 }

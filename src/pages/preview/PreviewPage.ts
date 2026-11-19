@@ -60,4 +60,27 @@ export class PreviewPage extends BasePage {
     const cta = await this.getHealedCta();
     await cta.click();
   }
+
+  async getVehicleTitle(): Promise<string> {
+    return (await this.header.vehicleTitle().textContent().catch(() => ''))?.trim() || '';
+  }
+
+  /**
+   * Scrapes structured specifications key-value map from the decoded preview page.
+   */
+  async getSpecifications(): Promise<Record<string, string>> {
+    const specsMap: Record<string, string> = {};
+    const specsSection = this.page.locator('section:has-text("Specifications"), div:has(h2:has-text("Specifications"))').first();
+    if (await specsSection.isVisible().catch(() => false)) {
+      const items = await specsSection.locator('div > div:has(> span), div > div:has(> div), dl > div').all();
+      for (const item of items) {
+        const text = (await item.innerText().catch(() => '')).trim();
+        const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+        if (lines.length >= 2) {
+          specsMap[lines[0]] = lines[1];
+        }
+      }
+    }
+    return specsMap;
+  }
 }
