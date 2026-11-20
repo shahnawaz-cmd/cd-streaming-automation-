@@ -545,6 +545,16 @@ export class EvidenceModule {
   }
 
   /**
+   * Generic compact JSON proof attachment (`<TC-id>-<name>.json`) for lightweight scenarios.
+   */
+  async recordProof(testInfo: TestInfo, name: string, data: object): Promise<void> {
+    const testPrefix = testInfo.title.slice(0, 5);
+    const body = JSON.stringify({ status: 'PASSED', ...data, capturedAt: new Date().toISOString() }, null, 2);
+    await testInfo.attach(`${testPrefix}-${name}.json`, { body, contentType: 'application/json' });
+    this.logger.info(`📄 Attached ${testPrefix}-${name}.json`);
+  }
+
+  /**
    * Attaches compact JSON telemetry for Preview email cache / autofill scenarios.
    */
   async recordEmailCacheProof(testInfo: TestInfo, scenarios: EmailCacheScenarioResult[]): Promise<void> {

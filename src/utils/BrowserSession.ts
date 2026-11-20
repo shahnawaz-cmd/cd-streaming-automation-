@@ -1,4 +1,4 @@
-import { Browser, BrowserContext, BrowserContextOptions } from '@playwright/test';
+import { Browser, BrowserContext, BrowserContextOptions, Page } from '@playwright/test';
 import { ENV } from '../config/env';
 
 /**
@@ -24,5 +24,19 @@ export class BrowserSession {
     });
     await context.addInitScript(BrowserSession.stripWebdriver);
     return context;
+  }
+
+  /** Runs `action` on a page in a brand-new isolated session and always closes the context. */
+  static async withPage<T>(
+    browser: Browser,
+    action: (page: Page) => Promise<T>,
+    options: BrowserContextOptions = {}
+  ): Promise<T> {
+    const context = await BrowserSession.newContext(browser, options);
+    try {
+      return await action(await context.newPage());
+    } finally {
+      await context.close();
+    }
   }
 }

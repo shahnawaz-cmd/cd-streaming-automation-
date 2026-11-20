@@ -31,4 +31,6 @@ export {
   PlansCouponComparisonResult,
   PlanSaveCheckItem,
 } from './PlansSaveTagModule';
+export { TrackingCookieModule, TrackingCookieResult } from './TrackingCookieModule';
+export { DualCouponModule, DualCouponResult } from './DualCouponModule';
 export { EmailCacheModule, EmailCacheScenarioResult, EmailCacheCheck, PREVIEW_EMAIL_CACHE_KEY } from './EmailCacheModule';

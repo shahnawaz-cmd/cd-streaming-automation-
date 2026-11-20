@@ -111,4 +111,16 @@ test.describe('CD Streaming - Preview & Checkout', () => {
     const loggedIn = await test.step('Logged-in: account email auto-filled -> direct Checkout', () => emailCacheModule.verifyLoggedInAutofill());
     await test.step('Attach Email Cache JSON telemetry', () => evidenceModule.recordEmailCacheProof(testInfo, [sameSession, newSession, loggedIn]));
   });
+
+  test('TC-16: Referrer & UTM Cookies - utm_details (UTM landing) vs referrer (Google only)', async ({ trackingCookieModule, evidenceModule }, testInfo) => {
+    const utm = await test.step('Preview with UTMs from Google: utm_details set, referrer cookie suppressed', () => trackingCookieModule.verifyUtmCookie());
+    const referrer = await test.step('Base URL from Google (no UTMs): referrer cookie set, no utm_details', () => trackingCookieModule.verifyReferrerCookie());
+    await test.step('Attach tracking cookie JSON telemetry', () => evidenceModule.recordProof(testInfo, 'Tracking-Cookies-Proof', { utm, referrer }));
+  });
+
+  test('TC-17: Dual Coupon - Home offer=get20, then Preview exit-intent banner still triggers', async ({ dualCouponModule, evidenceModule }, testInfo) => {
+    test.slow();
+    const result = await test.step('Apply get20 on Homepage, decode VIN, trigger exit-intent banner on Preview', () => dualCouponModule.verifyExitIntentWithHomeCoupon('get20'));
+    await test.step('Attach dual coupon JSON telemetry', () => evidenceModule.recordProof(testInfo, 'Dual-Coupon-Proof', result));
+  });
 });

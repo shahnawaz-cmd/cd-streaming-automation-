@@ -57,6 +57,17 @@ export class PreviewPage extends BasePage {
     await this.navigate(`/preview?${params.toString()}`);
   }
 
+  /** Opens Preview with extra tracking query params (e.g. UTMs) and an optional HTTP referrer. */
+  async openWithTracking(
+    vin: string,
+    tracking: Record<string, string> = {},
+    referer?: string,
+    type: PreviewType = 'vhr'
+  ): Promise<void> {
+    const params = new URLSearchParams({ vin, wpPage: 'homepage', type, ...tracking });
+    await this.page.goto(`/preview?${params}`, { waitUntil: 'domcontentloaded', referer });
+  }
+
   // Delegated conveniences
   accessRecordCta = (): Locator => this.header.accessRecordCta();
   decodingIndicator = (): Locator => this.header.loadingSpinner();

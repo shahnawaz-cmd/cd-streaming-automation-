@@ -38,6 +38,18 @@ export class HomePage extends BasePage {
     await this.page.waitForTimeout(1500);
   }
 
+  /** Opens the base URL with a coupon applied via the `offer` query parameter (e.g. `/?offer=get20`). */
+  async openWithOffer(offer: string): Promise<void> {
+    await this.navigate(`/?${new URLSearchParams({ offer })}`);
+    await this.hero.vinInput().waitFor({ state: 'visible' });
+  }
+
+  /** Opens the base URL as if arriving from an external site (sets the HTTP referrer). */
+  async openFromReferrer(referer: string): Promise<void> {
+    await this.page.goto('/', { waitUntil: 'domcontentloaded', referer });
+    await this.hero.vinInput().waitFor({ state: 'visible' });
+  }
+
   // Delegated conveniences for backward compatibility
   vinInput = (): Locator => this.hero.vinInput();
   submitBtn = (): Locator => this.hero.submitBtn();

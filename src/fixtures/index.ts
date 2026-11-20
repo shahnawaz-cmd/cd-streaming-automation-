@@ -21,6 +21,8 @@ import {
   RevisitBannerModule,
   PlansSaveTagModule,
   EmailCacheModule,
+  TrackingCookieModule,
+  DualCouponModule,
 } from '../modules';
 
 export type EnterpriseFixtures = {
@@ -47,6 +49,8 @@ export type EnterpriseFixtures = {
   revisitBannerModule: RevisitBannerModule;
   plansSaveTagModule: PlansSaveTagModule;
   emailCacheModule: EmailCacheModule;
+  trackingCookieModule: TrackingCookieModule;
+  dualCouponModule: DualCouponModule;
 };
 
 export const test = base.extend<EnterpriseFixtures>({
@@ -157,6 +161,14 @@ export const test = base.extend<EnterpriseFixtures>({
 
   emailCacheModule: async ({ browser, page, previewPage, checkoutPage, previewCheckoutModule }, use) => {
     await use(new EmailCacheModule(browser, page, previewPage, checkoutPage, previewCheckoutModule));
+  },
+
+  trackingCookieModule: async ({ browser }, use) => {
+    await use(new TrackingCookieModule(browser));
+  },
+
+  dualCouponModule: async ({ page, homePage, previewPage, previewCheckoutModule, exitIntentModule }, use) => {
+    await use(new DualCouponModule(page, homePage, previewPage, previewCheckoutModule, exitIntentModule));
   },
 });
 
