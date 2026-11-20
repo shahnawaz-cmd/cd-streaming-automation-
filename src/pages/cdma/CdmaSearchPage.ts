@@ -15,9 +15,17 @@ export class CdmaSearchPage extends BasePage {
     await expect(this.reportCreditsLabel()).toBeVisible();
   }
 
-  reportCreditsLabel = (): Locator => this.page.getByText(/Report Credits\s*:/i).first();
+  reportCreditsLabel = (): Locator =>
+    this.page
+      .getByText(/^Report Credits\s*:?/i)
+      .or(this.page.locator('aside, nav').getByText(/Report\s+Credits/i))
+      .first();
 
-  buildSheetCreditsLabel = (): Locator => this.page.getByText(/Build Sheet Credits\s*:/i).first();
+  buildSheetCreditsLabel = (): Locator =>
+    this.page
+      .getByText(/^Build Sheet Credits\s*:?/i)
+      .or(this.page.locator('aside, nav').getByText(/Build\s*Sheet\s+Credits/i))
+      .first();
 
   /** Credit count shown next to a label ("Report Credits : 1"), read from the label's container. */
   private async creditsNextTo(label: Locator): Promise<number> {

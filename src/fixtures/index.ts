@@ -25,6 +25,7 @@ import {
   DualCouponModule,
   ClarityModule,
   PricingPurchaseModule,
+  PricingCouponModule,
 } from '../modules';
 
 export type EnterpriseFixtures = {
@@ -57,6 +58,7 @@ export type EnterpriseFixtures = {
   dualCouponModule: DualCouponModule;
   clarityModule: ClarityModule;
   pricingPurchaseModule: PricingPurchaseModule;
+  pricingCouponModule: PricingCouponModule;
 };
 
 export const test = base.extend<EnterpriseFixtures>({
@@ -187,6 +189,10 @@ export const test = base.extend<EnterpriseFixtures>({
 
   pricingPurchaseModule: async ({ page, pricingPage, checkoutPage, cdmaSearchPage }, use) => {
     await use(new PricingPurchaseModule(page, pricingPage, checkoutPage, cdmaSearchPage));
+  },
+
+  pricingCouponModule: async ({ page, pricingPage }, use) => {
+    await use(new PricingCouponModule(page, pricingPage));
   },
 
   clarityModule: async ({ browser }, use) => {

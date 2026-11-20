@@ -107,14 +107,32 @@ export class CheckoutPage extends BasePage {
   }
 
   /** Stripe Payment Element iframe (card number / expiry / CVC live inside it). */
-  stripeFrame = () => this.page.frameLocator('iframe[title="Secure payment input frame"]').first();
+  stripeFrame = () =>
+    this.page
+      .frameLocator('iframe[title="Secure payment input frame"], iframe[name^="__privateStripeFrame"], iframe[src*="elements-inner-payment"]')
+      .first();
 
   /** Fills the Stripe card form with a test card and submits payment. */
   async payWithCard(card: { number: string; expiry: string; cvc: string }): Promise<void> {
     const stripe = this.stripeFrame();
-    await stripe.getByRole('textbox', { name: 'Card number' }).fill(card.number);
-    await stripe.getByRole('textbox', { name: /Expiration/i }).fill(card.expiry);
-    await stripe.getByRole('textbox', { name: 'Security code' }).fill(card.cvc);
+    await stripe
+      .getByRole('textbox', { name: /Card number/i })
+      .or(stripe.getByPlaceholder(/1234 1234 1234 1234/))
+      .or(stripe.locator('input[name="number"], input[autocomplete="cc-number"]'))
+      .first()
+      .fill(card.number);
+    await stripe
+      .getByRole('textbox', { name: /Expiration/i })
+      .or(stripe.getByPlaceholder(/MM\s*\/\s*YY/i))
+      .or(stripe.locator('input[name="expiry"], input[autocomplete="cc-exp"]'))
+      .first()
+      .fill(card.expiry);
+    await stripe
+      .getByRole('textbox', { name: /Security code|CVC/i })
+      .or(stripe.getByPlaceholder(/CVC/i))
+      .or(stripe.locator('input[name="cvc"], input[autocomplete="cc-csc"]'))
+      .first()
+      .fill(card.cvc);
     await expect(this.payButton()).toBeEnabled();
     await this.payButton().click();
   }

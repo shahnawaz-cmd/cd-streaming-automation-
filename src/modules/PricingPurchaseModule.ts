@@ -1,6 +1,6 @@
 import { expect, Page } from '@playwright/test';
 import { CheckoutDecodedPayload, CheckoutPage } from '../pages/CheckoutPage';
-import { PricingPage } from '../pages/PricingPage';
+import { PricingPage } from '../pages/pricing';
 import { CdmaSearchPage } from '../pages/cdma/CdmaSearchPage';
 import { EmailGenerator } from '../data/EmailGenerator';
 import { STRIPE_TEST_CARD } from '../data/StripeTestCard';
@@ -63,7 +63,9 @@ export class PricingPurchaseModule {
     const email = EmailGenerator.generate();
 
     await this.pricingPage.open();
-    const { price, currencyToken } = await this.pricingPage.readPlan(plan);
+    const selected = (await this.pricingPage.plans.read()).find((p) => p.name === plan);
+    if (!selected) throw new Error(`[PricingPurchaseModule] Plan "${plan}" not found on /pricing`);
+    const { totalPrice: price, currencyToken } = selected;
     await this.pricingPage.startCheckout(plan, email);
     this.logger.pass(`Pricing -> Checkout (${plan}, ${email})`);
 

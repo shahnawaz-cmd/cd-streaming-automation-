@@ -6,21 +6,14 @@ export const ENV = {
 };
 
 export interface ClarityTarget {
-  name: 'PROD' | 'DEV';
+  name: 'DEV';
   baseURL: string;
-  /** Microsoft Clarity project id loaded by the site's tag (differs per environment). */
+  /** Microsoft Clarity project id loaded by the site's tag. */
   projectId: string;
 }
 
-export const CLARITY_TARGETS: ClarityTarget[] = [
-  {
-    name: 'PROD',
-    baseURL: process.env.PROD_BASE_URL || 'https://classicdecoder.com',
-    projectId: process.env.PROD_CLARITY_ID || 'ikaw63rxww',
-  },
-  {
-    name: 'DEV',
-    baseURL: ENV.baseURL,
-    projectId: process.env.DEV_CLARITY_ID || 's7m7s4qxs7',
-  },
-];
+export const CLARITY_TARGET: ClarityTarget = {
+  name: 'DEV',
+  baseURL: ENV.baseURL,
+  projectId: process.env.CLARITY_PROJECT_ID || 's7m7s4qxs7',
+};

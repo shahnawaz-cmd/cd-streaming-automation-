@@ -44,7 +44,8 @@ CD Streaming Framework
    - Independent spec (`tests/pricing.spec.ts`): `/pricing` ➔ email dialog ➔ Checkout ➔ Stripe test card ➔ members area credits.
    - Captures and asserts the Stripe `payment_intents/{id}/confirm` response (`succeeded`, test mode, amount & currency) and the site's `/api/update-payment` response (`success`, Report Credits = 1); account token and client secret are redacted from the attached JSON.
    - Amount and currency are compared dynamically (minor units, zero-decimal aware), so it works for any location-based currency. Runs against dev (Stripe test mode) only.
-7. **Microsoft Clarity Verification (`TC-18`)**: Prod and Dev each run in an isolated session and verify the project tag, `window.clarity`, `_clck`/`_clsk` cookies and `/collect` beacons on Home ➔ Preview ➔ Checkout.
+7. **Pricing Coupon, Dynamic Discount (`TC-PRICING-02`)**: the discount percentage is never hard-coded; it is read from the banner and the `validate-coupon` API (which must agree) and every plan price in both toggle modes is checked against its own no-coupon baseline.
+8. **Microsoft Clarity Verification (`TC-18`)**: Runs on Dev in an isolated session and verifies the project tag, `window.clarity`, `_clck`/`_clsk` cookies and `/collect` beacons on Home ➔ Preview ➔ Checkout.
 
 ---
 
@@ -69,8 +70,9 @@ CD Streaming Framework
 | **TC-15** | Preview Email Cache | Same-session prefill, new-session validation & logged-in autofill with direct Checkout | `EmailGenerator`, `GarageCredentialsGenerator` |
 | **TC-16** | Referrer & UTM Cookies | `utm_details` (UTM landing) vs `referrer` (base URL from Google) in isolated sessions | Live MongoDB Pool |
 | **TC-17** | Dual Coupon | Home `offer=get20` ➔ Preview exit-intent banner still triggers | Live MongoDB Pool |
-| **TC-18** | Microsoft Clarity (Prod & Dev) | Project tag, `_clck`/`_clsk` cookies, `/collect` beacons & same user across Home ➔ Preview ➔ Checkout | Live MongoDB Pool |
+| **TC-18** | Microsoft Clarity (Dev) | Project tag, `_clck`/`_clsk` cookies, `/collect` beacons & same user across Home ➔ Preview ➔ Checkout | Live MongoDB Pool |
 | **TC-PRICING-01** | Pricing Page E2E (`tests/pricing.spec.ts`) | `/pricing` ➔ Checkout ➔ Stripe test-card payment ➔ Stripe confirm & `update-payment` API responses ➔ Report Credits; amount & currency location-agnostic | `EmailGenerator`, Stripe test card |
+| **TC-PRICING-02** | Pricing Coupon (`tests/pricing.spec.ts`) | `?offer=get20` banner % == coupon API % == every plan price (baseline x (1 - %)) in Report & Build Sheet toggle modes; % is read from the site, never hard-coded | Live site |
 
 ---
 
@@ -99,7 +101,7 @@ Create a `.env` file based on `.env.example`:
 cp .env.example .env
 ```
 
-Optional overrides used by TC-18 (Clarity): `PROD_BASE_URL` (default `https://classicdecoder.com`), `PROD_CLARITY_ID`, `DEV_CLARITY_ID`. `BASE_URL` is the Dev target.
+Optional: `CLARITY_PROJECT_ID` overrides the Dev Microsoft Clarity project id used by TC-18.
 
 ---
 
