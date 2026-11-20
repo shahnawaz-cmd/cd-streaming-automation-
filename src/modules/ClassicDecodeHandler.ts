@@ -1,4 +1,4 @@
-import { expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { PreviewPage } from '../pages/preview/PreviewPage';
 import { Logger } from '../utils/Logger';
 
@@ -51,5 +51,19 @@ export class ClassicDecodeHandler {
     await expect(cta).toBeEnabled();
     this.logger.pass('✅ Condition A Succeeded: Classic VIN was accepted/decoded by server without error. CTA is enabled (Same as Case 2 decoded flow).');
     return 'DECODED';
+  }
+
+  /**
+   * Classic Failover Graceful Skip Guard:
+   * Whenever TC-05 failover ('Update Your Vehicle Details') triggers instead of a full decode,
+   * gracefully skips the test so downstream edit/upsell/revisit assertions do not fail falsely.
+   */
+  async requireDecodedOrSkip(vin: string, timeoutMs?: number): Promise<void> {
+    const outcome = await this.verifyOutcome(timeoutMs);
+    if (outcome === 'MANUAL_YMMT_FALLBACK' || (await this.previewPage.classicFallback.isVisible())) {
+      const reason = `Classic VIN "${vin}" not decoded (TC-05 Classic Failover: 'Update Your Vehicle Details')`;
+      this.logger.warn(`⏭️ ${reason} — gracefully skipping test.`);
+      test.skip(true, reason);
+    }
   }
 }

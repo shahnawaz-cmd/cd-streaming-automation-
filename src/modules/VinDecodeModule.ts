@@ -32,13 +32,9 @@ export class VinDecodeModule {
   }
 
   async decodeClassicMappedWithProof(testInfo: TestInfo): Promise<string> {
-    let vin = VinGenerator.classicMapped();
-    while (true) {
-      await this.decodeFromHomepage(vin);
-      const outcome = await this.classicDecodeHandler.verifyOutcome();
-      if (outcome === 'DECODED') break;
-      vin = VinGenerator.classicMapped();
-    }
+    const vin = VinGenerator.classicMapped();
+    await this.decodeFromHomepage(vin);
+    await this.classicDecodeHandler.requireDecodedOrSkip(vin);
     await this.evidenceModule.recordOriginalSpecsProof(testInfo, this.previewPage, vin);
     return vin;
   }

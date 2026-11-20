@@ -82,4 +82,10 @@ test.describe('CD Streaming - Preview & Checkout', () => {
     const checkoutSync = await test.step('Verify separate Checkout Order Summary & Pay CTA price sync', () => checkoutPriceSyncModule.proceedAndVerifyPriceSync(selection));
     await test.step('Attach Plan & Checkout Price Sync JSON telemetry', () => evidenceModule.recordPlanCheckoutPriceSyncProof(testInfo, selection, checkoutSync));
   });
+
+  test('TC-13: Revisit Banner - Modern type sync & Classic updated YMMT in new session', async ({ revisitBannerModule, evidenceModule }, testInfo) => {
+    const modern = await test.step('Modern VIN decode -> Home Revisit Banner -> Grab CTA -> Preview', () => revisitBannerModule.verifyModernRevisitBanner());
+    const classic = await test.step('New session Classic VIN -> Edit YMMT -> Home Revisit Banner -> Grab CTA -> Preview', () => revisitBannerModule.verifyClassicEditYmmtRevisitBanner());
+    await test.step('Attach Revisit Banner JSON telemetry', () => evidenceModule.recordRevisitBannerProof(testInfo, modern, classic));
+  });
 });

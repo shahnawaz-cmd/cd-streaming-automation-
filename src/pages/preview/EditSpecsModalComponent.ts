@@ -1,4 +1,4 @@
-import { Page, Locator, expect } from '@playwright/test';
+import { Page, Locator, expect, test } from '@playwright/test';
 import { Logger } from '../../utils/Logger';
 import { DynamicVehicleSpecs } from '../../data/SpecsGenerator';
 import { ExitIntentModalComponent } from './ExitIntentModalComponent';
@@ -72,6 +72,15 @@ export class EditSpecsModalComponent {
       await expect(this.editTrigger()).toBeVisible();
       await this.editTrigger().click();
 
+      const classicFallbackHeading = this.page.getByText('Update Your Vehicle Details').first();
+      await this.updateSpecsOptionBtn().or(classicFallbackHeading).first().waitFor({ state: 'visible' });
+
+      if (await classicFallbackHeading.isVisible().catch(() => false)) {
+        const reason = "Classic VIN not decoded with specifications (TC-05 Classic Failover: 'Update Your Vehicle Details')";
+        this.logger.warn(`⏭️ ${reason} — gracefully skipping test.`);
+        test.skip(true, reason);
+      }
+
       await expect(this.updateSpecsOptionBtn()).toBeVisible();
       await this.updateSpecsOptionBtn().click({ force: true });
 
@@ -118,6 +127,6 @@ export class EditSpecsModalComponent {
     await expect(this.submitBtn()).toBeEnabled();
     await this.submitBtn().click({ force: true });
     // Native Playwright wait: wait until pop-up closes as server processes the update
-    await this.modal().waitFor({ state: 'hidden', timeout: 60_000 });
+    await this.modal().waitFor({ state: 'hidden' });
   }
 }

@@ -5,6 +5,7 @@ import { HomeExitIntentComponent } from './HomeExitIntentComponent';
 import { HomeTrackingHelper, UtmParams } from './HomeTrackingHelper';
 import { HomeTrustComponent } from './HomeTrustComponent';
 import { HomeNavComponent } from './HomeNavComponent';
+import { RevisitBannerComponent } from './RevisitBannerComponent';
 
 /**
  * HomePage (Unified Modular Page Object)
@@ -17,6 +18,7 @@ export class HomePage extends BasePage {
   readonly tracking: HomeTrackingHelper;
   readonly trust: HomeTrustComponent;
   readonly nav: HomeNavComponent;
+  readonly revisitBanner: RevisitBannerComponent;
 
   constructor(page: Page) {
     super(page);
@@ -25,6 +27,7 @@ export class HomePage extends BasePage {
     this.tracking = new HomeTrackingHelper(page);
     this.trust = new HomeTrustComponent(page);
     this.nav = new HomeNavComponent(page);
+    this.revisitBanner = new RevisitBannerComponent(page);
   }
 
   // Navigation

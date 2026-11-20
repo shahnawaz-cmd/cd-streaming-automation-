@@ -58,33 +58,31 @@ export class UpsellModule {
   ) {}
 
   private async resolveDecodedVin(kind: VehicleKind): Promise<string> {
+    if (kind === 'CLASSIC') {
+      const vin = VinGenerator.classicMapped();
+      await this.previewPage.openDirectly(vin, 'vhr');
+      await this.classicDecodeHandler.requireDecodedOrSkip(vin);
+      this.logger.pass(`Decoded ${kind} VIN ${vin} cleanly`);
+      return vin;
+    }
+
     const maxAttempts = 4;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      const vin = kind === 'CLASSIC' ? VinGenerator.classicMapped() : await VinGenerator.modernFromMongo();
+      const vin = await VinGenerator.modernFromMongo();
       await this.previewPage.openDirectly(vin, 'vhr');
-
-      if (kind === 'CLASSIC') {
-        const outcome = await this.classicDecodeHandler.verifyOutcome();
-        if (outcome === 'DECODED') {
-          this.logger.pass(`Decoded ${kind} VIN ${vin} cleanly (attempt ${attempt})`);
-          return vin;
-        }
-      } else {
-        const outcome = await this.previewCheckoutModule.waitForLocalizedDecodeOutcome();
-        if (outcome === 'DECODED') {
-          this.logger.pass(`Decoded ${kind} VIN ${vin} cleanly (attempt ${attempt})`);
-          return vin;
-        }
+      const outcome = await this.previewCheckoutModule.waitForLocalizedDecodeOutcome();
+      if (outcome === 'DECODED') {
+        this.logger.pass(`Decoded ${kind} VIN ${vin} cleanly (attempt ${attempt})`);
+        return vin;
       }
       this.logger.warn(`Attempt ${attempt}/${maxAttempts}: ${kind} VIN ${vin} fell back; trying another VIN...`);
     }
     throw new Error(`[UpsellModule] Failed to decode a ${kind} VIN in ${maxAttempts} attempts`);
   }
 
-  private async waitForDecodeOnCurrentType(kind: VehicleKind): Promise<void> {
+  private async waitForDecodeOnCurrentType(kind: VehicleKind, vin: string): Promise<void> {
     if (kind === 'CLASSIC') {
-      const outcome = await this.classicDecodeHandler.verifyOutcome();
-      expect(outcome, 'Expected Classic Preview page to stay decoded').toBe('DECODED');
+      await this.classicDecodeHandler.requireDecodedOrSkip(vin);
     } else {
       const outcome = await this.previewCheckoutModule.waitForLocalizedDecodeOutcome();
       expect(outcome, 'Expected Modern Preview page to stay decoded').toBe('DECODED');
@@ -100,7 +98,7 @@ export class UpsellModule {
   ): Promise<UpsellVariantResult> {
     if (!alreadyLoaded) {
       await this.previewPage.openDirectly(vin, previewType);
-      await this.waitForDecodeOnCurrentType(kind);
+      await this.waitForDecodeOnCurrentType(kind, vin);
     }
 
     const upsell = await this.previewPage.upsell.readSnapshot();

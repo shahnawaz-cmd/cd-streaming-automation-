@@ -9,6 +9,7 @@ import type { GarageFlowResult } from './GarageModule';
 import type { UpsellMatrixResult } from './UpsellModule';
 import type { PlanAndUpsellSelectionResult } from './PlanSelectionModule';
 import type { CheckoutPriceSyncResult } from './CheckoutPriceSyncModule';
+import type { ModernRevisitResult, ClassicEditYmmtRevisitResult } from './RevisitBannerModule';
 import { SupportedLocale } from '../data/LocaleDictionary';
 import { Logger } from '../utils/Logger';
 
@@ -445,5 +446,30 @@ export class EvidenceModule {
       contentType: 'application/json',
     });
     this.logger.info(`📄 Attached Plan & Checkout Price Sync JSON telemetry for VIN: ${selection.vin}`);
+  }
+
+  /**
+   * Attaches JSON telemetry for Modern & Classic Edit-YMMT Revisit Banner flows.
+   */
+  async recordRevisitBannerProof(
+    testInfo: TestInfo,
+    modern: ModernRevisitResult,
+    classic: ClassicEditYmmtRevisitResult
+  ): Promise<void> {
+    const testPrefix = testInfo.title.slice(0, 5);
+    const payload = {
+      outcome: 'REVISIT_BANNER_VERIFIED',
+      modernFlow: modern,
+      classicEditYmmtFlow: classic,
+      capturedAt: new Date().toISOString(),
+    };
+
+    await testInfo.attach(`${testPrefix}-Revisit-Banner-Proof.json`, {
+      body: JSON.stringify(payload, null, 2),
+      contentType: 'application/json',
+    });
+    this.logger.info(
+      `📄 Attached Revisit Banner JSON telemetry: Modern(${modern.vin}, ${modern.previewType}) & Classic(${classic.vin})`
+    );
   }
 }

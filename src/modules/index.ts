@@ -20,3 +20,8 @@ export { SiteSettingsModule, SiteSettingsUpsellConfig } from './SiteSettingsModu
 export { UpsellModule, UpsellVariantResult, UpsellMatrixResult, VehicleKind } from './UpsellModule';
 export { PlanSelectionModule, PlanAndUpsellSelectionResult } from './PlanSelectionModule';
 export { CheckoutPriceSyncModule, CheckoutPriceSyncResult } from './CheckoutPriceSyncModule';
+export {
+  RevisitBannerModule,
+  ModernRevisitResult,
+  ClassicEditYmmtRevisitResult,
+} from './RevisitBannerModule';

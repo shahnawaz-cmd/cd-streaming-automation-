@@ -9,13 +9,23 @@ export class NotFoundFallbackComponent {
   constructor(private page: Page) {}
 
   container = (): Locator =>
-    this.page.locator('section:has-text("We couldn\'t find a vehicle"), div:has-text("We couldn\'t find a vehicle")').first();
+    this.page
+      .locator('section:has-text("We couldn\'t find a vehicle"), div:has-text("We couldn\'t find a vehicle")')
+      .or(this.page.locator('main > div:has(h1:has-text("doesn’t look right")), main > div:has(h1:has-text("doesn\'t look right"))'))
+      .first();
 
   heading = (): Locator =>
-    this.page.getByText("We couldn't find a vehicle for this VIN").first();
+    this.page
+      .getByText("We couldn't find a vehicle for this VIN")
+      .or(this.page.getByRole('heading', { name: /That VIN doesn[’']t look right/i }))
+      .or(this.page.getByText(/That VIN doesn[’']t look right/i))
+      .first();
 
   helpText = (): Locator =>
-    this.page.getByText("Check that the VIN is typed correctly and search again below.").first();
+    this.page
+      .getByText("Check that the VIN is typed correctly and search again below.")
+      .or(this.page.getByText(/Check it for typos and search again below/i))
+      .first();
 
   checkedVinBadge = (vin?: string): Locator =>
     vin ? this.page.getByText(vin).first() : this.page.locator('text=/Checked VIN/i >> xpath=..').first();
