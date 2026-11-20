@@ -23,6 +23,11 @@ export type AnyDecodeOutcome = ModernDecodeOutcome | ClassicDecodeOutcome;
  * Keeps test specs 100% clean, declarative, and free of boilerplate.
  */
 export class EvidenceModule {
+  /** "TC-07: Edit..." -> "TC-07", "TC-PRICING-01: Pricing..." -> "TC-PRICING-01". */
+  private static testId(testInfo: TestInfo): string {
+    return testInfo.title.match(/^(TC-[A-Za-z0-9-]+?)\s*:/)?.[1] ?? testInfo.title.slice(0, 5);
+  }
+
   private logger = new Logger('EvidenceModule');
 
   /**
@@ -52,7 +57,7 @@ export class EvidenceModule {
     vin: string,
     outcome: AnyDecodeOutcome = 'DECODED'
   ): Promise<void> {
-    const testPrefix = testInfo.title.slice(0, 5);
+    const testPrefix = EvidenceModule.testId(testInfo);
 
     if (outcome === 'NOT_FOUND_FALLBACK') {
       // Snap the Modern "Not Found" error banner
@@ -146,7 +151,7 @@ export class EvidenceModule {
     vin: string,
     data: { url: string; saveTags: string[]; ctaPriceText: string }
   ): Promise<void> {
-    const testPrefix = testInfo.title.slice(0, 5);
+    const testPrefix = EvidenceModule.testId(testInfo);
 
     // Capture plans with discount and Save tags
     await this.captureElement(
@@ -182,7 +187,7 @@ export class EvidenceModule {
     previewPage: PreviewPage,
     vin: string
   ): Promise<void> {
-    const testPrefix = testInfo.title.slice(0, 5);
+    const testPrefix = EvidenceModule.testId(testInfo);
     const vehicleTitle = await previewPage.getVehicleTitle();
     const specs = await previewPage.getSpecifications();
 
@@ -211,7 +216,7 @@ export class EvidenceModule {
     vin: string,
     data: { year: string; make: string; model: string; trim: string }
   ): Promise<void> {
-    const testPrefix = testInfo.title.slice(0, 5);
+    const testPrefix = EvidenceModule.testId(testInfo);
 
     const payload = {
       vin,
@@ -242,7 +247,7 @@ export class EvidenceModule {
     vin: string,
     specs: any
   ): Promise<void> {
-    const testPrefix = testInfo.title.slice(0, 5);
+    const testPrefix = EvidenceModule.testId(testInfo);
     const renderedOnUiSpecs = await previewPage.getSpecifications();
 
     const payload = {
@@ -271,7 +276,7 @@ export class EvidenceModule {
     locale: SupportedLocale,
     report: LocalizationValidationReport
   ): Promise<void> {
-    const testPrefix = testInfo.title.slice(0, 5);
+    const testPrefix = EvidenceModule.testId(testInfo);
 
     const payload = {
       vin,
@@ -308,7 +313,7 @@ export class EvidenceModule {
     usedEmail: string,
     report: LocalizationValidationReport
   ): Promise<void> {
-    const testPrefix = testInfo.title.slice(0, 5);
+    const testPrefix = EvidenceModule.testId(testInfo);
 
     const payload = {
       vin,
@@ -344,7 +349,7 @@ export class EvidenceModule {
     previewPage: PreviewPage,
     result: ShortVinValidationResult
   ): Promise<void> {
-    const testPrefix = testInfo.title.slice(0, 5);
+    const testPrefix = EvidenceModule.testId(testInfo);
 
     await this.captureElement(
       testInfo,
@@ -375,7 +380,7 @@ export class EvidenceModule {
     signupResult: GarageFlowResult,
     loginResult: GarageFlowResult
   ): Promise<void> {
-    const testPrefix = testInfo.title.slice(0, 5);
+    const testPrefix = EvidenceModule.testId(testInfo);
 
     const screenshotBuffer = await cdmaGaragePage.getPage().screenshot({ fullPage: true });
     await testInfo.attach(`${testPrefix}-CDMA-My-Garage.png`, {
@@ -406,7 +411,7 @@ export class EvidenceModule {
     testInfo: TestInfo,
     result: UpsellMatrixResult
   ): Promise<void> {
-    const testPrefix = testInfo.title.slice(0, 5);
+    const testPrefix = EvidenceModule.testId(testInfo);
     const payload = {
       outcome: 'UPSELL_GIF_AND_SITE_SETTINGS_VERIFIED',
       ...result,
@@ -428,7 +433,7 @@ export class EvidenceModule {
     selection: PlanAndUpsellSelectionResult,
     checkoutSync: CheckoutPriceSyncResult
   ): Promise<void> {
-    const testPrefix = testInfo.title.slice(0, 5);
+    const testPrefix = EvidenceModule.testId(testInfo);
     const payload = {
       outcome: 'PLAN_AND_CHECKOUT_PRICE_SYNC_VERIFIED',
       vin: selection.vin,
@@ -458,7 +463,7 @@ export class EvidenceModule {
     modern: ModernRevisitResult,
     classic: ClassicEditYmmtRevisitResult
   ): Promise<void> {
-    const testPrefix = testInfo.title.slice(0, 5);
+    const testPrefix = EvidenceModule.testId(testInfo);
     const payload = {
       outcome: 'REVISIT_BANNER_VERIFIED',
       modernFlow: modern,
@@ -518,7 +523,7 @@ export class EvidenceModule {
     testInfo: TestInfo,
     result: PlansSaveTagMatrixResult
   ): Promise<void> {
-    const testPrefix = testInfo.title.slice(0, 5);
+    const testPrefix = EvidenceModule.testId(testInfo);
     const currency =
       result.vhr.baselineCurrency === result.vhr.couponCurrency
         ? result.vhr.couponCurrency
@@ -548,7 +553,7 @@ export class EvidenceModule {
    * Generic compact JSON proof attachment (`<TC-id>-<name>.json`) for lightweight scenarios.
    */
   async recordProof(testInfo: TestInfo, name: string, data: object): Promise<void> {
-    const testPrefix = testInfo.title.slice(0, 5);
+    const testPrefix = EvidenceModule.testId(testInfo);
     const body = JSON.stringify({ status: 'PASSED', ...data, capturedAt: new Date().toISOString() }, null, 2);
     await testInfo.attach(`${testPrefix}-${name}.json`, { body, contentType: 'application/json' });
     this.logger.info(`📄 Attached ${testPrefix}-${name}.json`);
@@ -558,7 +563,7 @@ export class EvidenceModule {
    * Attaches compact JSON telemetry for Preview email cache / autofill scenarios.
    */
   async recordEmailCacheProof(testInfo: TestInfo, scenarios: EmailCacheScenarioResult[]): Promise<void> {
-    const testPrefix = testInfo.title.slice(0, 5);
+    const testPrefix = EvidenceModule.testId(testInfo);
     const body = JSON.stringify({ status: 'PASSED', scenarios, capturedAt: new Date().toISOString() }, null, 2);
     await testInfo.attach(`${testPrefix}-Email-Cache-Proof.json`, { body, contentType: 'application/json' });
     this.logger.info(`📄 Attached Email Cache JSON telemetry (${scenarios.map((s) => s.scenario).join(', ')})`);

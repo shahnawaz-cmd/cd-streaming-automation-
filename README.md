@@ -16,7 +16,7 @@ CD Streaming Framework
 ├── Layer 4: Test Data         (src/data/)       - MongoDB live VIN pool, Classic VIN generator & Anti-bounce emails
 ├── Layer 5: Utilities         (src/utils/)      - Self-healing locator agent, isolated browser sessions & structured logging
 ├── Layer 6: Fixtures          (src/fixtures/)   - Dependency injection & bot fingerprint stripping
-├── Layer 7: Test Specs        (tests/)          - Concise 3-step declarative specifications
+├── Layer 7: Test Specs        (tests/)          - `cd-streaming.spec.ts` (TC-01..TC-18) + independent `pricing.spec.ts` (TC-PRICING-01)
 └── Layer 8: Evidence          (src/modules/)    - Focused element snapshots (~25 KB) & JSON telemetry (1 KB)
 ```
 
@@ -39,6 +39,12 @@ CD Streaming Framework
    - Captures targeted element snippets (~25 KB PNG) and structured JSON telemetry (~1 KB).
 5. **Self-Healing Locators (100% Free & Offline)**:
    - Automated multi-strategy locator cascades (`getByRole` ➔ `getByTestId` ➔ `getByPlaceholder` ➔ CSS/XPath) with autonomous failure recovery and telemetry logging.
+
+6. **Pricing Purchase with Payment API Capture (`TC-PRICING-01`)**:
+   - Independent spec (`tests/pricing.spec.ts`): `/pricing` ➔ email dialog ➔ Checkout ➔ Stripe test card ➔ members area credits.
+   - Captures and asserts the Stripe `payment_intents/{id}/confirm` response (`succeeded`, test mode, amount & currency) and the site's `/api/update-payment` response (`success`, Report Credits = 1); account token and client secret are redacted from the attached JSON.
+   - Amount and currency are compared dynamically (minor units, zero-decimal aware), so it works for any location-based currency. Runs against dev (Stripe test mode) only.
+7. **Microsoft Clarity Verification (`TC-18`)**: Prod and Dev each run in an isolated session and verify the project tag, `window.clarity`, `_clck`/`_clsk` cookies and `/collect` beacons on Home ➔ Preview ➔ Checkout.
 
 ---
 
@@ -64,6 +70,7 @@ CD Streaming Framework
 | **TC-16** | Referrer & UTM Cookies | `utm_details` (UTM landing) vs `referrer` (base URL from Google) in isolated sessions | Live MongoDB Pool |
 | **TC-17** | Dual Coupon | Home `offer=get20` ➔ Preview exit-intent banner still triggers | Live MongoDB Pool |
 | **TC-18** | Microsoft Clarity (Prod & Dev) | Project tag, `_clck`/`_clsk` cookies, `/collect` beacons & same user across Home ➔ Preview ➔ Checkout | Live MongoDB Pool |
+| **TC-PRICING-01** | Pricing Page E2E (`tests/pricing.spec.ts`) | `/pricing` ➔ Checkout ➔ Stripe test-card payment ➔ Stripe confirm & `update-payment` API responses ➔ Report Credits; amount & currency location-agnostic | `EmailGenerator`, Stripe test card |
 
 ---
 
@@ -92,6 +99,8 @@ Create a `.env` file based on `.env.example`:
 cp .env.example .env
 ```
 
+Optional overrides used by TC-18 (Clarity): `PROD_BASE_URL` (default `https://classicdecoder.com`), `PROD_CLARITY_ID`, `DEV_CLARITY_ID`. `BASE_URL` is the Dev target.
+
 ---
 
 ## 🧪 Running Tests
@@ -108,6 +117,7 @@ npx playwright test -g "TC-01"
 npx playwright test -g "TC-02"
 npx playwright test -g "TC-03"
 npx playwright test -g "TC-1[5-7]"   # email cache, referrer/UTM cookies, dual coupon
+npx playwright test tests/pricing.spec.ts   # independent Pricing page E2E (Stripe payment)
 
 # View HTML Test Report
 npx playwright show-report

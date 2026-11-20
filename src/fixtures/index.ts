@@ -1,5 +1,5 @@
 import { test as base, expect } from '@playwright/test';
-import { HomePage, PreviewPage, CheckoutPage, CdmaGaragePage } from '../pages';
+import { HomePage, PreviewPage, CheckoutPage, CdmaGaragePage, PricingPage, CdmaSearchPage } from '../pages';
 import { BrowserSession } from '../utils/BrowserSession';
 import {
   VinDecodeModule,
@@ -24,6 +24,7 @@ import {
   TrackingCookieModule,
   DualCouponModule,
   ClarityModule,
+  PricingPurchaseModule,
 } from '../modules';
 
 export type EnterpriseFixtures = {
@@ -31,6 +32,8 @@ export type EnterpriseFixtures = {
   previewPage: PreviewPage;
   checkoutPage: CheckoutPage;
   cdmaGaragePage: CdmaGaragePage;
+  pricingPage: PricingPage;
+  cdmaSearchPage: CdmaSearchPage;
   vinDecodeModule: VinDecodeModule;
   flowDetectionModule: FlowDetectionModule;
   evidenceModule: EvidenceModule;
@@ -53,6 +56,7 @@ export type EnterpriseFixtures = {
   trackingCookieModule: TrackingCookieModule;
   dualCouponModule: DualCouponModule;
   clarityModule: ClarityModule;
+  pricingPurchaseModule: PricingPurchaseModule;
 };
 
 export const test = base.extend<EnterpriseFixtures>({
@@ -171,6 +175,18 @@ export const test = base.extend<EnterpriseFixtures>({
 
   dualCouponModule: async ({ page, homePage, previewPage, previewCheckoutModule, exitIntentModule }, use) => {
     await use(new DualCouponModule(page, homePage, previewPage, previewCheckoutModule, exitIntentModule));
+  },
+
+  pricingPage: async ({ page }, use) => {
+    await use(new PricingPage(page));
+  },
+
+  cdmaSearchPage: async ({ page }, use) => {
+    await use(new CdmaSearchPage(page));
+  },
+
+  pricingPurchaseModule: async ({ page, pricingPage, checkoutPage, cdmaSearchPage }, use) => {
+    await use(new PricingPurchaseModule(page, pricingPage, checkoutPage, cdmaSearchPage));
   },
 
   clarityModule: async ({ browser }, use) => {

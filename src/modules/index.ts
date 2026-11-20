@@ -31,6 +31,7 @@ export {
   PlansCouponComparisonResult,
   PlanSaveCheckItem,
 } from './PlansSaveTagModule';
+export { PricingPurchaseModule, PricingPurchaseResult, StripeConfirmProof, UpdatePaymentProof } from './PricingPurchaseModule';
 export { ClarityModule, ClarityJourneyResult, ClarityStageSnapshot } from './ClarityModule';
 export { TrackingCookieModule, TrackingCookieResult } from './TrackingCookieModule';
 export { DualCouponModule, DualCouponResult } from './DualCouponModule';

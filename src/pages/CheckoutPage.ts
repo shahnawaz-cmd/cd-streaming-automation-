@@ -106,6 +106,19 @@ export class CheckoutPage extends BasePage {
     throw new Error(`[CheckoutPage] Could not parse price under "${labelName}" in Order Summary:\n${lines.join('\n')}`);
   }
 
+  /** Stripe Payment Element iframe (card number / expiry / CVC live inside it). */
+  stripeFrame = () => this.page.frameLocator('iframe[title="Secure payment input frame"]').first();
+
+  /** Fills the Stripe card form with a test card and submits payment. */
+  async payWithCard(card: { number: string; expiry: string; cvc: string }): Promise<void> {
+    const stripe = this.stripeFrame();
+    await stripe.getByRole('textbox', { name: 'Card number' }).fill(card.number);
+    await stripe.getByRole('textbox', { name: /Expiration/i }).fill(card.expiry);
+    await stripe.getByRole('textbox', { name: 'Security code' }).fill(card.cvc);
+    await expect(this.payButton()).toBeEnabled();
+    await this.payButton().click();
+  }
+
   /**
    * Asserts the user has landed on the checkout page with zero inline static timeouts.
    */

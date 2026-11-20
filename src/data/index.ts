@@ -9,3 +9,4 @@ export {
   SUPPORTED_LOCALES,
   ENGLISH_CORE_LEAK_MARKERS,
 } from './LocaleDictionary';
+export { STRIPE_TEST_CARD } from './StripeTestCard';
