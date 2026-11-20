@@ -6,6 +6,9 @@ import { ClassicDecodeOutcome } from './ClassicDecodeHandler';
 import { LocalizationValidationReport } from './LanguageValidator';
 import type { ShortVinValidationResult } from './ShortVinHandler';
 import type { GarageFlowResult } from './GarageModule';
+import type { UpsellMatrixResult } from './UpsellModule';
+import type { PlanAndUpsellSelectionResult } from './PlanSelectionModule';
+import type { CheckoutPriceSyncResult } from './CheckoutPriceSyncModule';
 import { SupportedLocale } from '../data/LocaleDictionary';
 import { Logger } from '../utils/Logger';
 
@@ -391,5 +394,56 @@ export class EvidenceModule {
       contentType: 'application/json',
     });
     this.logger.info(`📄 Attached CDMA Garage Signup & Login telemetry JSON for: ${signupResult.email}`);
+  }
+
+  /**
+   * Attaches JSON telemetry for Modern vs Classic Upsell GIFs, site_settings alignment & toggle sync.
+   */
+  async recordUpsellMatrixProof(
+    testInfo: TestInfo,
+    result: UpsellMatrixResult
+  ): Promise<void> {
+    const testPrefix = testInfo.title.slice(0, 5);
+    const payload = {
+      outcome: 'UPSELL_GIF_AND_SITE_SETTINGS_VERIFIED',
+      ...result,
+      capturedAt: new Date().toISOString(),
+    };
+
+    await testInfo.attach(`${testPrefix}-Upsell-GIF-SiteSettings-Proof.json`, {
+      body: JSON.stringify(payload, null, 2),
+      contentType: 'application/json',
+    });
+    this.logger.info('📄 Attached Upsell GIF & site_settings JSON telemetry');
+  }
+
+  /**
+   * Attaches JSON telemetry for currency-agnostic Plan selection, Upsell toggle & Checkout Price Sync.
+   */
+  async recordPlanCheckoutPriceSyncProof(
+    testInfo: TestInfo,
+    selection: PlanAndUpsellSelectionResult,
+    checkoutSync: CheckoutPriceSyncResult
+  ): Promise<void> {
+    const testPrefix = testInfo.title.slice(0, 5);
+    const payload = {
+      outcome: 'PLAN_AND_CHECKOUT_PRICE_SYNC_VERIFIED',
+      vin: selection.vin,
+      previewType: selection.previewType,
+      currencyToken: selection.currencyToken,
+      availablePlans: selection.availablePlans,
+      selectedPlan: selection.selectedPlan,
+      upsell: selection.upsell,
+      previewCtaAfterPlan: selection.previewCtaAfterPlan,
+      previewCtaAfterUpsell: selection.previewCtaAfterUpsell,
+      checkout: checkoutSync,
+      capturedAt: new Date().toISOString(),
+    };
+
+    await testInfo.attach(`${testPrefix}-Plan-Checkout-PriceSync-Proof.json`, {
+      body: JSON.stringify(payload, null, 2),
+      contentType: 'application/json',
+    });
+    this.logger.info(`📄 Attached Plan & Checkout Price Sync JSON telemetry for VIN: ${selection.vin}`);
   }
 }

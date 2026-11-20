@@ -13,6 +13,10 @@ import {
   LanguageModule,
   ShortVinHandler,
   GarageModule,
+  SiteSettingsModule,
+  UpsellModule,
+  PlanSelectionModule,
+  CheckoutPriceSyncModule,
 } from '../modules';
 
 export type EnterpriseFixtures = {
@@ -32,6 +36,10 @@ export type EnterpriseFixtures = {
   languageModule: LanguageModule;
   shortVinHandler: ShortVinHandler;
   garageModule: GarageModule;
+  siteSettingsModule: SiteSettingsModule;
+  upsellModule: UpsellModule;
+  planSelectionModule: PlanSelectionModule;
+  checkoutPriceSyncModule: CheckoutPriceSyncModule;
 };
 
 export const test = base.extend<EnterpriseFixtures>({
@@ -118,6 +126,22 @@ export const test = base.extend<EnterpriseFixtures>({
     await use(
       new GarageModule(page, previewPage, cdmaGaragePage, vinDecodeModule, previewCheckoutModule, evidenceModule)
     );
+  },
+
+  siteSettingsModule: async ({ page }, use) => {
+    await use(new SiteSettingsModule(page));
+  },
+
+  upsellModule: async ({ page, previewPage, classicDecodeHandler, previewCheckoutModule }, use) => {
+    await use(new UpsellModule(page, previewPage, classicDecodeHandler, previewCheckoutModule));
+  },
+
+  planSelectionModule: async ({ previewPage, previewCheckoutModule }, use) => {
+    await use(new PlanSelectionModule(previewPage, previewCheckoutModule));
+  },
+
+  checkoutPriceSyncModule: async ({ page, previewCheckoutModule, checkoutPage }, use) => {
+    await use(new CheckoutPriceSyncModule(page, previewCheckoutModule, checkoutPage));
   },
 });
 

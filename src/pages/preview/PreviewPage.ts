@@ -11,6 +11,7 @@ import { ClassicFallbackComponent } from './ClassicFallbackComponent';
 import { ShortVinErrorComponent } from './ShortVinErrorComponent';
 import { AddToGarageModalComponent } from './AddToGarageModalComponent';
 import { PlansComponent } from './PlansComponent';
+import { UpsellComponent } from './UpsellComponent';
 
 export type PreviewType = 'vhr' | 'sticker';
 
@@ -31,6 +32,7 @@ export class PreviewPage extends BasePage {
   readonly shortVinError: ShortVinErrorComponent;
   readonly addToGarage: AddToGarageModalComponent;
   readonly plans: PlansComponent;
+  readonly upsell: UpsellComponent;
 
   constructor(page: Page) {
     super(page);
@@ -45,6 +47,7 @@ export class PreviewPage extends BasePage {
     this.shortVinError = new ShortVinErrorComponent(page);
     this.addToGarage = new AddToGarageModalComponent(page);
     this.plans = new PlansComponent(page);
+    this.upsell = new UpsellComponent(page);
   }
 
   // Navigation

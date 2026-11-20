@@ -70,4 +70,16 @@ test.describe('CD Streaming - Preview & Checkout', () => {
     const loginResult = await test.step('Login via Add to Garage & verify both vehicles in CDMA', () => garageModule.addVehicleViaLoginAndVerifyCdma(signupCtx));
     await test.step('Capture CDMA screenshot, attach Garage API proof & close browser', () => garageModule.recordGarageCdmaProof(testInfo, signupCtx.result, loginResult));
   });
+
+  test('TC-11: Upsell GIF & Site Settings Alignment - Modern vs Classic across VHR & Sticker', async ({ siteSettingsModule, upsellModule, evidenceModule }, testInfo) => {
+    const siteSettings = await test.step('Resolve live site_settings upsell copy keys', () => siteSettingsModule.resolveSiteSettings());
+    const matrix = await test.step('Verify Classic vs Modern upsell GIFs, text alignment & toggle sync', () => upsellModule.verifyModernVsClassicMatrix(siteSettings));
+    await test.step('Attach Upsell GIF & site_settings JSON telemetry', () => evidenceModule.recordUpsellMatrixProof(testInfo, matrix));
+  });
+
+  test('TC-12: Plan Selection, Upsell Toggle & Checkout Price Sync (Currency-Agnostic)', async ({ planSelectionModule, checkoutPriceSyncModule, evidenceModule }, testInfo) => {
+    const selection = await test.step('Select non-default plan & enable upsell on Preview', () => planSelectionModule.selectPlanAndEnableUpsell('vhr'));
+    const checkoutSync = await test.step('Verify separate Checkout Order Summary & Pay CTA price sync', () => checkoutPriceSyncModule.proceedAndVerifyPriceSync(selection));
+    await test.step('Attach Plan & Checkout Price Sync JSON telemetry', () => evidenceModule.recordPlanCheckoutPriceSyncProof(testInfo, selection, checkoutSync));
+  });
 });

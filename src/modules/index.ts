@@ -16,3 +16,7 @@ export {
   GarageSignupContext,
   GarageApiVehicle,
 } from './GarageModule';
+export { SiteSettingsModule, SiteSettingsUpsellConfig } from './SiteSettingsModule';
+export { UpsellModule, UpsellVariantResult, UpsellMatrixResult, VehicleKind } from './UpsellModule';
+export { PlanSelectionModule, PlanAndUpsellSelectionResult } from './PlanSelectionModule';
+export { CheckoutPriceSyncModule, CheckoutPriceSyncResult } from './CheckoutPriceSyncModule';

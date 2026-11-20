@@ -1,5 +1,6 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { BasePage } from './BasePage';
+import { PriceParser } from '../utils/PriceParser';
 
 export interface CheckoutStructuredContent {
   url: string;
@@ -9,33 +10,101 @@ export interface CheckoutStructuredContent {
   bodyText: string;
 }
 
+export interface CheckoutDecodedPayload {
+  code?: string;
+  type?: string;
+  vin?: string;
+  email?: string;
+  extra?: boolean;
+  nos?: number;
+  price?: number;
+  addOnPrice?: number;
+  addOnLabel?: string;
+  currencySign?: string;
+  currency?: string;
+}
+
+export interface CheckoutOrderSummary {
+  url: string;
+  decodedData: CheckoutDecodedPayload | null;
+  summaryText: string;
+  packageAmount: number;
+  addOnAmount: number;
+  totalAmount: number;
+  payButtonText: string;
+  payButtonAmount: number;
+  currencyToken: string;
+}
+
 /**
  * Layer 2: CheckoutPage Page Object
- * Encapsulates Checkout page locators and basic interactions.
+ * 100% Native Playwright self-healing locators & currency-agnostic Order Summary extraction.
  */
 export class CheckoutPage extends BasePage {
   constructor(page: Page) {
     super(page);
   }
 
-  // Locators as arrow functions
   heading = (): Locator =>
-    this.page.locator('h1, h2').first();
+    this.page
+      .getByRole('heading', { level: 1 })
+      .or(this.page.locator('h1, h2'))
+      .first();
 
   couponInput = (): Locator =>
-    this.page.locator('input[placeholder*="Coupon" i], input[placeholder*="Discount" i], input[name*="coupon" i]').first();
+    this.page
+      .locator('input[placeholder*="Coupon" i], input[placeholder*="Discount" i], input[name*="coupon" i]')
+      .or(this.page.locator('aside input[type="text"], section input[type="text"]'))
+      .first();
 
   applyCouponBtn = (): Locator =>
-    this.page.locator('button:has-text("Apply")').first();
+    this.page
+      .getByRole('button', { name: /^Apply$/i })
+      .or(this.page.locator('button:has-text("Apply")'))
+      .first();
 
-  totalPrice = (): Locator =>
-    this.page.locator('[data-testid="total-price"], .total-price, span:has-text("$")').first();
-
-  emailInput = (): Locator =>
-    this.page.locator('input[type="email"], input[name*="email" i]').first();
+  orderSummarySection = (): Locator =>
+    this.page
+      .locator('section:has(h2:has-text("Order summary"))')
+      .or(this.page.locator('div:has(> h2:has-text("Order summary"))'))
+      .or(this.page.locator('section:has-text("PACKAGE"):has-text("Total")'))
+      .or(this.page.locator('aside:has-text("Order summary")'))
+      .first();
 
   payButton = (): Locator =>
-    this.page.locator('button:has-text("Pay"), button:has-text("Complete Order"), [data-testid="pay-btn"]').first();
+    this.page
+      .getByRole('button', { name: /^(?:Pay|Complete Order)\b.*\d/i })
+      .or(this.page.locator('button:has-text("Pay")').filter({ hasText: /\d/ }))
+      .or(this.page.locator('[data-testid="pay-btn"]'))
+      .first();
+
+  totalPrice = (): Locator =>
+    this.orderSummarySection()
+      .locator('div:has(> :text-is("Total")), tr:has(:text-is("Total"))')
+      .or(this.page.locator('[data-testid="total-price"], .total-price'))
+      .first();
+
+  emailInput = (): Locator =>
+    this.page
+      .locator('input[type="email"], input[name*="email" i]')
+      .first();
+
+  private findSectionAmount(lines: string[], headingPattern: RegExp, labelName: string): number {
+    const idx = lines.findIndex((line) => headingPattern.test(line));
+    if (idx === -1) {
+      throw new Error(`[CheckoutPage] Could not locate "${labelName}" section in Order Summary:\n${lines.join('\n')}`);
+    }
+    const candidateSameLine = lines[idx].replace(headingPattern, '').trim();
+    if (candidateSameLine) {
+      const parsed = PriceParser.tryParseCurrencyLine(candidateSameLine);
+      if (parsed) return parsed.amount;
+    }
+    for (let j = idx + 1; j <= Math.min(idx + 3, lines.length - 1); j++) {
+      const parsed = PriceParser.tryParseCurrencyLine(lines[j]);
+      if (parsed) return parsed.amount;
+    }
+    throw new Error(`[CheckoutPage] Could not parse price under "${labelName}" in Order Summary:\n${lines.join('\n')}`);
+  }
 
   /**
    * Asserts the user has landed on the checkout page with zero inline static timeouts.
@@ -43,6 +112,52 @@ export class CheckoutPage extends BasePage {
   async verifyLandedOnCheckout(): Promise<void> {
     await this.page.waitForURL(/\/checkout/);
     await expect(this.heading()).toBeVisible();
+  }
+
+  /**
+   * Reads Order Summary line items, Pay CTA amount, and decoded checkout URL payload.
+   * Never calls networkidle (Stripe iframe keeps sockets active) and never hardcodes currency signs.
+   */
+  async readOrderSummary(): Promise<CheckoutOrderSummary> {
+    await this.verifyLandedOnCheckout();
+    await expect(this.orderSummarySection()).toBeVisible();
+    await expect(this.payButton()).toBeVisible();
+
+    const summaryText = (await this.orderSummarySection().innerText()).trim();
+    const lines = summaryText
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    const packageAmount = this.findSectionAmount(lines, /^PACKAGE\b/i, 'PACKAGE');
+    const addOnAmount = this.findSectionAmount(lines, /^ADD-ON\b/i, 'ADD-ON');
+    const totalAmount = this.findSectionAmount(lines, /^Total\b/i, 'Total');
+
+    const payButtonText = (await this.payButton().innerText()).replace(/\s+/g, ' ').trim();
+    const parsedPay = PriceParser.parseLastPrice(payButtonText);
+
+    const url = this.page.url();
+    const dataParam = new URL(url).searchParams.get('data');
+    let decodedData: CheckoutDecodedPayload | null = null;
+    if (dataParam) {
+      try {
+        decodedData = JSON.parse(Buffer.from(dataParam, 'base64').toString('utf8')) as CheckoutDecodedPayload;
+      } catch {
+        decodedData = null;
+      }
+    }
+
+    return {
+      url,
+      decodedData,
+      summaryText,
+      packageAmount,
+      addOnAmount,
+      totalAmount,
+      payButtonText,
+      payButtonAmount: parsedPay.amount,
+      currencyToken: parsedPay.currencyToken,
+    };
   }
 
   /**
