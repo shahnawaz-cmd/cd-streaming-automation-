@@ -14,7 +14,7 @@ CD Streaming Framework
 ├── Layer 2: Modular POM       (src/pages/)      - Sub-component based Page Objects (Header, Modal, Fallbacks)
 ├── Layer 3: Workflows         (src/modules/)    - Business actions, race condition handlers & exit intent
 ├── Layer 4: Test Data         (src/data/)       - MongoDB live VIN pool, Classic VIN generator & Anti-bounce emails
-├── Layer 5: Utilities         (src/utils/)      - Self-healing locator agent & structured logging
+├── Layer 5: Utilities         (src/utils/)      - Self-healing locator agent, isolated browser sessions & structured logging
 ├── Layer 6: Fixtures          (src/fixtures/)   - Dependency injection & bot fingerprint stripping
 ├── Layer 7: Test Specs        (tests/)          - Concise 3-step declarative specifications
 └── Layer 8: Evidence          (src/modules/)    - Focused element snapshots (~25 KB) & JSON telemetry (1 KB)
@@ -49,6 +49,20 @@ CD Streaming Framework
 | **TC-01** | Modern 17-Char VIN Decoding & CTA Guard | **Condition A (Decoded)** vs **Condition B (Not Found Banner)** | Live MongoDB Pool (`VinGenerator`) |
 | **TC-02** | Classic Mapped VIN Decoding & CTA Guard | **Condition A (Decoded)** vs **Condition B (Manual YMMT Form)** | Randomized 4-digit sequence (`ClassicMappedVin`) |
 | **TC-03** | Exit-Intent & Coupon Guard | Popup Trigger ➔ Coupon Guard ➔ 15% Discount on Plans | Unique anti-bounce email (`EmailGenerator`) |
+| **TC-04** | Invalid Modern VIN (repeated letter A-Z x17) | Fallback banner vs Decoded | `InvalidVinGenerator` |
+| **TC-05** | Invalid Classic VIN (repeated digit x5) | Fallback vs Decoded; classic failover skip guard on decode timeout | `InvalidVinGenerator` |
+| **TC-06** | Edit YMM | Dynamic Year/Make/Model selection + Trim verification | Live decoded VIN |
+| **TC-07** | Edit Specifications | Dynamic specs update with before/after JSON telemetry | `SpecsGenerator` |
+| **TC-08** | Multi-Language Localization | Random language ➔ Modern VIN decode ➔ Preview & Checkout validation | `LocaleDictionary` |
+| **TC-09** | Short Invalid VIN (< 5 chars via direct URL) | Error banner & disabled checkout guard | `ShortVinGenerator` |
+| **TC-10** | Add to Garage (Signup & Login) | Auto-navigation to CDMA My Garage with persisted vehicles | `GarageCredentialsGenerator` |
+| **TC-11** | Upsell GIF & Site Settings Alignment | Modern vs Classic across VHR & Sticker | Live `site_settings` |
+| **TC-12** | Plan Selection, Upsell Toggle & Checkout Price Sync | Currency-agnostic Preview ➔ Checkout Order Summary sync | Live MongoDB Pool |
+| **TC-13** | Revisit Banner | Modern type sync & Classic updated YMMT in a new session | Live decoded VIN |
+| **TC-14** | Plans "Save %" Tag Logic | Dynamic prices, currency & compounded Save % (without vs. with coupon) | Live MongoDB Pool |
+| **TC-15** | Preview Email Cache | Same-session prefill, new-session validation & logged-in autofill with direct Checkout | `EmailGenerator`, `GarageCredentialsGenerator` |
+| **TC-16** | Referrer & UTM Cookies | `utm_details` (UTM landing) vs `referrer` (base URL from Google) in isolated sessions | Live MongoDB Pool |
+| **TC-17** | Dual Coupon | Home `offer=get20` ➔ Preview exit-intent banner still triggers | Live MongoDB Pool |
 
 ---
 
@@ -92,6 +106,7 @@ $env:CI="true"; npx playwright test
 npx playwright test -g "TC-01"
 npx playwright test -g "TC-02"
 npx playwright test -g "TC-03"
+npx playwright test -g "TC-1[5-7]"   # email cache, referrer/UTM cookies, dual coupon
 
 # View HTML Test Report
 npx playwright show-report
