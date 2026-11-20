@@ -1,9 +1,11 @@
 import { Locator, TestInfo } from '@playwright/test';
 import { PreviewPage } from '../pages/preview/PreviewPage';
+import { CdmaGaragePage } from '../pages/cdma/CdmaGaragePage';
 import { ModernDecodeOutcome } from './ModernDecodeHandler';
 import { ClassicDecodeOutcome } from './ClassicDecodeHandler';
 import { LocalizationValidationReport } from './LanguageValidator';
 import type { ShortVinValidationResult } from './ShortVinHandler';
+import type { GarageFlowResult } from './GarageModule';
 import { SupportedLocale } from '../data/LocaleDictionary';
 import { Logger } from '../utils/Logger';
 
@@ -355,5 +357,39 @@ export class EvidenceModule {
       contentType: 'application/json',
     });
     this.logger.info(`📄 Attached Short VIN Error telemetry JSON for VIN: ${result.vin}`);
+  }
+
+  /**
+   * Captures CDMA My Garage screenshot and pure JSON telemetry (including Garage API payloads)
+   * for Add to Garage Signup & Login auto-navigation into CDMA.
+   */
+  async recordGarageCdmaProof(
+    testInfo: TestInfo,
+    cdmaGaragePage: CdmaGaragePage,
+    signupResult: GarageFlowResult,
+    loginResult: GarageFlowResult
+  ): Promise<void> {
+    const testPrefix = testInfo.title.slice(0, 5);
+
+    const screenshotBuffer = await cdmaGaragePage.getPage().screenshot({ fullPage: true });
+    await testInfo.attach(`${testPrefix}-CDMA-My-Garage.png`, {
+      body: screenshotBuffer,
+      contentType: 'image/png',
+    });
+    this.logger.info(`📸 Attached CDMA screenshot: ${testPrefix}-CDMA-My-Garage.png`);
+
+    const payload = {
+      outcome: 'GARAGE_CDMA_AUTO_NAVIGATED',
+      email: signupResult.email,
+      signupPhase: signupResult,
+      loginPhase: loginResult,
+      capturedAt: new Date().toISOString(),
+    };
+
+    await testInfo.attach(`${testPrefix}-Garage-CDMA-Proof.json`, {
+      body: JSON.stringify(payload, null, 2),
+      contentType: 'application/json',
+    });
+    this.logger.info(`📄 Attached CDMA Garage Signup & Login telemetry JSON for: ${signupResult.email}`);
   }
 }

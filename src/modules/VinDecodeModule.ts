@@ -35,7 +35,7 @@ export class VinDecodeModule {
     let vin = VinGenerator.classicMapped();
     while (true) {
       await this.decodeFromHomepage(vin);
-      const outcome = await this.classicDecodeHandler.verifyOutcome(60_000);
+      const outcome = await this.classicDecodeHandler.verifyOutcome();
       if (outcome === 'DECODED') break;
       vin = VinGenerator.classicMapped();
     }

@@ -9,6 +9,7 @@ import { BuildSheetComponent } from './BuildSheetComponent';
 import { NotFoundFallbackComponent } from './NotFoundFallbackComponent';
 import { ClassicFallbackComponent } from './ClassicFallbackComponent';
 import { ShortVinErrorComponent } from './ShortVinErrorComponent';
+import { AddToGarageModalComponent } from './AddToGarageModalComponent';
 import { PlansComponent } from './PlansComponent';
 
 export type PreviewType = 'vhr' | 'sticker';
@@ -28,6 +29,7 @@ export class PreviewPage extends BasePage {
   readonly notFound: NotFoundFallbackComponent;
   readonly classicFallback: ClassicFallbackComponent;
   readonly shortVinError: ShortVinErrorComponent;
+  readonly addToGarage: AddToGarageModalComponent;
   readonly plans: PlansComponent;
 
   constructor(page: Page) {
@@ -41,6 +43,7 @@ export class PreviewPage extends BasePage {
     this.notFound = new NotFoundFallbackComponent(page);
     this.classicFallback = new ClassicFallbackComponent(page);
     this.shortVinError = new ShortVinErrorComponent(page);
+    this.addToGarage = new AddToGarageModalComponent(page);
     this.plans = new PlansComponent(page);
   }
 

@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator, expect } from '@playwright/test';
 
 /**
  * ExitIntentModalComponent
@@ -64,5 +64,38 @@ export class ExitIntentModalComponent {
     const btn = this.claimDiscountBtn();
     await btn.waitFor({ state: 'visible', timeout: 5_000 });
     await btn.click({ force: true });
+  }
+
+  /**
+   * Registers a scoped Playwright locator handler to dismiss unexpected Exit-Intent
+   * popups that intercept pointer events during unrelated Preview actions.
+   */
+  static async runWithOverlayGuard<T>(page: Page, action: () => Promise<T>): Promise<T> {
+    const exitIntentDialog = page
+      .getByRole('dialog', { name: /15% OFF|Before you go/i })
+      .or(page.locator('[role="dialog"], dialog').filter({ hasText: /15% OFF|Before you go/i }))
+      .first();
+
+    const closeBtn = exitIntentDialog
+      .getByRole('button', { name: /Close/i })
+      .or(exitIntentDialog.locator('button[aria-label*="close" i], button:has-text("Close")'))
+      .first();
+
+    await page.addLocatorHandler(exitIntentDialog, async () => {
+      await expect(async () => {
+        if (await closeBtn.isVisible()) {
+          await closeBtn.click({ force: true });
+        } else if (await exitIntentDialog.isVisible()) {
+          await page.keyboard.press('Escape');
+        }
+        expect(await exitIntentDialog.isVisible()).toBe(false);
+      }).toPass();
+    });
+
+    try {
+      return await action();
+    } finally {
+      await page.removeLocatorHandler(exitIntentDialog);
+    }
   }
 }

@@ -1,5 +1,5 @@
 import { test as base, expect } from '@playwright/test';
-import { HomePage, PreviewPage, CheckoutPage } from '../pages';
+import { HomePage, PreviewPage, CheckoutPage, CdmaGaragePage } from '../pages';
 import {
   VinDecodeModule,
   FlowDetectionModule,
@@ -12,12 +12,14 @@ import {
   PreviewCheckoutModule,
   LanguageModule,
   ShortVinHandler,
+  GarageModule,
 } from '../modules';
 
 export type EnterpriseFixtures = {
   homePage: HomePage;
   previewPage: PreviewPage;
   checkoutPage: CheckoutPage;
+  cdmaGaragePage: CdmaGaragePage;
   vinDecodeModule: VinDecodeModule;
   flowDetectionModule: FlowDetectionModule;
   evidenceModule: EvidenceModule;
@@ -29,6 +31,7 @@ export type EnterpriseFixtures = {
   previewCheckoutModule: PreviewCheckoutModule;
   languageModule: LanguageModule;
   shortVinHandler: ShortVinHandler;
+  garageModule: GarageModule;
 };
 
 export const test = base.extend<EnterpriseFixtures>({
@@ -53,6 +56,10 @@ export const test = base.extend<EnterpriseFixtures>({
 
   checkoutPage: async ({ page }, use) => {
     await use(new CheckoutPage(page));
+  },
+
+  cdmaGaragePage: async ({ page }, use) => {
+    await use(new CdmaGaragePage(page));
   },
 
   vinDecodeModule: async ({ page, homePage, previewPage, classicDecodeHandler, evidenceModule }, use) => {
@@ -102,6 +109,15 @@ export const test = base.extend<EnterpriseFixtures>({
 
   shortVinHandler: async ({ previewPage, evidenceModule }, use) => {
     await use(new ShortVinHandler(previewPage, evidenceModule));
+  },
+
+  garageModule: async (
+    { page, previewPage, cdmaGaragePage, vinDecodeModule, previewCheckoutModule, evidenceModule },
+    use
+  ) => {
+    await use(
+      new GarageModule(page, previewPage, cdmaGaragePage, vinDecodeModule, previewCheckoutModule, evidenceModule)
+    );
   },
 });
 

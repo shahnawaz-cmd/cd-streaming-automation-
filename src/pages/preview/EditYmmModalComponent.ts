@@ -1,5 +1,6 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { Logger } from '../../utils/Logger';
+import { ExitIntentModalComponent } from './ExitIntentModalComponent';
 
 export interface SelectedYmmt {
   year: string;
@@ -73,15 +74,17 @@ export class EditYmmModalComponent {
    * Opens the Edit YMM modal / form with native auto-retry.
    */
   async open(): Promise<void> {
-    await expect(this.editTrigger()).toBeVisible();
-    await this.editTrigger().click();
+    await ExitIntentModalComponent.runWithOverlayGuard(this.page, async () => {
+      await expect(this.editTrigger()).toBeVisible();
+      await this.editTrigger().click();
 
-    // If step 1 dialog shows "Update year, make, model and trim", click it
-    if (await this.updateYmmtOptionBtn().isVisible().catch(() => false)) {
-      await this.updateYmmtOptionBtn().click({ force: true });
-    }
+      // If step 1 dialog shows "Update year, make, model and trim", click it
+      if (await this.updateYmmtOptionBtn().isVisible().catch(() => false)) {
+        await this.updateYmmtOptionBtn().click({ force: true });
+      }
 
-    await expect(this.yearSelect()).toBeVisible();
+      await expect(this.yearSelect()).toBeVisible();
+    });
   }
 
   /**

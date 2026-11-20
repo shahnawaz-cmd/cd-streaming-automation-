@@ -13,14 +13,27 @@ export class LanguageSwitcherComponent {
   constructor(private page: Page) {}
 
   globeTrigger = (): Locator =>
-    this.page.locator('button[aria-haspopup="menu"]:has(svg.lucide-globe)').first();
+    this.page
+      .locator('button[aria-haspopup="menu"]:has(svg.lucide-globe)')
+      .or(this.page.locator('header button[aria-haspopup="menu"]').filter({ hasText: /^(EN|ES|FR|DE|SV)$/i }))
+      .or(this.page.getByRole('banner').getByRole('button', { name: /^(EN|ES|FR|DE|SV)$/i }))
+      .first();
 
-  menu = (): Locator => this.page.getByRole('menu');
+  menu = (): Locator =>
+    this.page
+      .getByRole('menu')
+      .or(this.page.locator('[data-radix-menu-content]'))
+      .first();
 
-  radioOptions = (): Locator => this.menu().getByRole('menuitemradio');
+  radioOptions = (): Locator =>
+    this.menu()
+      .getByRole('menuitemradio')
+      .or(this.menu().getByRole('menuitem'));
 
   inactiveOptions = (): Locator =>
-    this.menu().locator('[role="menuitemradio"][aria-checked="false"]');
+    this.menu()
+      .locator('[role="menuitemradio"][aria-checked="false"]')
+      .or(this.menu().locator('[role="menuitem"][aria-checked="false"]'));
 
   /**
    * Navigates to homepage, waits for full hydration, and opens the Globe language menu natively.
@@ -28,8 +41,17 @@ export class LanguageSwitcherComponent {
   async openOnHomepage(): Promise<void> {
     await this.page.goto('/', { waitUntil: 'networkidle' });
     await expect(this.globeTrigger()).toBeVisible();
-    await this.globeTrigger().click();
-    await expect(this.menu()).toBeVisible();
+
+    await expect(async () => {
+      const trigger = this.globeTrigger();
+      const menuVisible = await this.menu().isVisible();
+      if (!menuVisible && (await trigger.getAttribute('aria-expanded')) !== 'true') {
+        await trigger.click();
+      }
+      expect(await this.menu().isVisible()).toBe(true);
+    }).toPass();
+
+    await expect(this.inactiveOptions().first()).toBeVisible();
   }
 
   /**

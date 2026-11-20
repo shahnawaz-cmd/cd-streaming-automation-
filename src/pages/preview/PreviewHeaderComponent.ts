@@ -22,6 +22,13 @@ export class PreviewHeaderComponent {
   accessRecordCta = (): Locator =>
     this.page.locator('button:has-text("Access Vehicle History"), button:has-text("Access Build Sheet"), [data-testid="preview-cta"]').first();
 
+  enabledAccessRecordCta = (): Locator =>
+    this.packageSection()
+      .locator('button[aria-busy="false"]:not([disabled])')
+      .or(this.page.locator('button:not([disabled]):has-text("Access Vehicle History")'))
+      .or(this.page.locator('button:not([disabled]):has-text("Access Build Sheet")'))
+      .first();
+
   loadingSpinner = (): Locator =>
     this.page.locator('[data-testid="decoding-spinner"], [aria-busy="true"], .animate-spin').first();
 

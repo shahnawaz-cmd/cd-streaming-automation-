@@ -17,10 +17,10 @@ export class ClassicDecodeHandler {
   constructor(private previewPage: PreviewPage) {}
 
   /**
-   * Evaluates the outcome using an instant race:
+   * Evaluates the outcome using Playwright's native .or() race:
    * Resolves the exact millisecond either Condition A OR Condition B finishes!
    */
-  async verifyOutcome(timeoutMs = 60_000): Promise<ClassicDecodeOutcome> {
+  async verifyOutcome(timeoutMs?: number): Promise<ClassicDecodeOutcome> {
     const classicFallback = this.previewPage.classicFallback;
     const header = this.previewPage.header;
 
@@ -31,18 +31,14 @@ export class ClassicDecodeHandler {
       return 'MANUAL_YMMT_FALLBACK';
     }
 
-    // Instant Race: resolves as soon as either Condition A or Condition B appears!
-    const outcome = await Promise.race([
-      header
-        .waitForDecodingComplete(timeoutMs)
-        .then(() => 'DECODED' as const),
-      classicFallback
-        .heading()
-        .waitFor({ state: 'visible', timeout: timeoutMs })
-        .then(() => 'MANUAL_YMMT_FALLBACK' as const),
-    ]);
+    const waitOpts =
+      timeoutMs !== undefined
+        ? { state: 'visible' as const, timeout: timeoutMs }
+        : { state: 'visible' as const };
 
-    if (outcome === 'MANUAL_YMMT_FALLBACK') {
+    await header.enabledAccessRecordCta().or(classicFallback.heading()).first().waitFor(waitOpts);
+
+    if (await classicFallback.isVisible()) {
       this.logger.warn(
         "⚠️ Condition B Triggered: 'Update Your Vehicle Details' fallback form displayed (Manual YMMT mode)."
       );

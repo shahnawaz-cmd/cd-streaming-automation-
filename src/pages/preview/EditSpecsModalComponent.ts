@@ -1,6 +1,7 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { Logger } from '../../utils/Logger';
 import { DynamicVehicleSpecs } from '../../data/SpecsGenerator';
+import { ExitIntentModalComponent } from './ExitIntentModalComponent';
 
 /**
  * Layer 2: EditSpecsModalComponent
@@ -67,13 +68,15 @@ export class EditSpecsModalComponent {
    * Opens the "Update specifications" modal using native web-first auto-retrying.
    */
   async open(): Promise<void> {
-    await expect(this.editTrigger()).toBeVisible();
-    await this.editTrigger().click();
+    await ExitIntentModalComponent.runWithOverlayGuard(this.page, async () => {
+      await expect(this.editTrigger()).toBeVisible();
+      await this.editTrigger().click();
 
-    await expect(this.updateSpecsOptionBtn()).toBeVisible();
-    await this.updateSpecsOptionBtn().click({ force: true });
+      await expect(this.updateSpecsOptionBtn()).toBeVisible();
+      await this.updateSpecsOptionBtn().click({ force: true });
 
-    await expect(this.engineTypeInput()).toBeVisible();
+      await expect(this.engineTypeInput()).toBeVisible();
+    });
   }
 
   /**

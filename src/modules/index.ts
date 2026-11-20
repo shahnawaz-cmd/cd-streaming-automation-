@@ -10,3 +10,9 @@ export { LanguageModule } from './LanguageModule';
 export { LanguageValidator, LocalizationValidationReport } from './LanguageValidator';
 export { PreviewCheckoutModule, LocalizedDecodeOutcome } from './PreviewCheckoutModule';
 export { ShortVinHandler, ShortVinValidationResult } from './ShortVinHandler';
+export {
+  GarageModule,
+  GarageFlowResult,
+  GarageSignupContext,
+  GarageApiVehicle,
+} from './GarageModule';
