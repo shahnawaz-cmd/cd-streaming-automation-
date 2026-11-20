@@ -1,9 +1,9 @@
 import { BrowserContext, expect, Page } from '@playwright/test';
-import { ENV } from '../config/env';
 import { RegionalConfig } from '../data/RegionalPool';
 import { PricingPage } from '../pages/pricing';
 import { PlanApiItem, toPlanApiItem } from '../utils/PlansApi';
 import { PriceParser } from '../utils/PriceParser';
+import { assertLocalizedPlan, injectGeoCookies } from '../utils/RegionalCurrency';
 import { Logger } from '../utils/Logger';
 
 export interface RegionalCurrencyResult {
@@ -33,7 +33,8 @@ export class PricingRegionalCurrencyModule {
   ) {}
 
   async verifyRegion(region: RegionalConfig): Promise<RegionalCurrencyResult> {
-    await this.injectGeoCookies(region);
+    await injectGeoCookies(this.context, region);
+    this.logger.info(`Geo cookies injected: ${region.name} (${region.country}, ${region.ip})`);
 
     // The call the page itself makes (not a side request), so it proves the UI was priced for this region
     const plansResponse = this.page.waitForResponse(
@@ -45,12 +46,7 @@ export class PricingRegionalCurrencyModule {
     const apiPlans: PlanApiItem[] = ((await response.json()).credit_plans ?? []).map(toPlanApiItem);
     expect(apiPlans.length, 'regional plans returned').toBeGreaterThan(0);
 
-    for (const plan of apiPlans) {
-      expect(plan.currencyCode, `${region.name}: ${plan.nos}-pack currency`).toBe(region.currency);
-      expect(plan.conversionRate, `${region.name}: conversion rate present for ${region.currency}`).toBeDefined();
-      const expected = plan.usdPrice * plan.conversionRate!;
-      PriceParser.assertAmountClose(plan.price, expected, `${region.currency} ${plan.nos}-pack = usd_price x rate`, PriceParser.dynamicTolerance(expected, 0.001, 0.02));
-    }
+    apiPlans.forEach((plan) => assertLocalizedPlan(plan, region));
 
     // UI: the card of the smallest pack shows the API amount (compared numerically: works for any currency symbol)
     const plan = apiPlans.reduce((smallest, p) => (p.nos < smallest.nos ? p : smallest));
@@ -72,15 +68,5 @@ export class PricingRegionalCurrencyModule {
       apiPrice: plan.price,
       uiNumbers,
     };
-  }
-
-  private async injectGeoCookies(region: RegionalConfig): Promise<void> {
-    this.logger.info(`Injecting geo cookies: ${region.name} (${region.country}, ${region.ip})`);
-    await this.context.clearCookies({ name: 'cwa_ip' });
-    await this.context.clearCookies({ name: 'cwa_country' });
-    await this.context.addCookies([
-      { name: 'cwa_ip', value: region.ip, url: ENV.baseURL, httpOnly: true, sameSite: 'Lax' },
-      { name: 'cwa_country', value: region.country, url: ENV.baseURL, sameSite: 'Lax' },
-    ]);
   }
 }

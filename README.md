@@ -16,7 +16,7 @@ CD Streaming Framework
 ├── Layer 4: Test Data         (src/data/)       - MongoDB live VIN pool, Classic VIN generator, Anti-bounce emails, Stripe test card & regional (geo) pool
 ├── Layer 5: Utilities         (src/utils/)      - Self-healing locator agent, isolated browser sessions, plans-API client, price parser & structured logging
 ├── Layer 6: Fixtures          (src/fixtures/)   - Dependency injection & bot fingerprint stripping
-├── Layer 7: Test Specs        (tests/)          - `cd-streaming.spec.ts` (TC-01..TC-18) + independent `pricing.spec.ts` (TC-PRICING-01..06)
+├── Layer 7: Test Specs        (tests/)          - `cd-streaming.spec.ts` (TC-01..TC-19) + independent `pricing.spec.ts` (TC-PRICING-01..06)
 └── Layer 8: Evidence          (src/modules/)    - Focused element snapshots (~25 KB) & JSON telemetry (1 KB)
 ```
 
@@ -72,6 +72,7 @@ CD Streaming Framework
 | **TC-16** | Referrer & UTM Cookies | `utm_details` (UTM landing) vs `referrer` (base URL from Google) in isolated sessions | Live MongoDB Pool |
 | **TC-17** | Dual Coupon | Home `offer=get20` ➔ Preview exit-intent banner still triggers | Live MongoDB Pool |
 | **TC-18** | Microsoft Clarity (Dev) | Project tag, `_clck`/`_clsk` cookies, `/collect` beacons & same user across Home ➔ Preview ➔ Checkout | Live MongoDB Pool |
+| **TC-19** | Regional Currency on Preview | Inject `cwa_ip`/`cwa_country` (random region of the 9-region pool, `PRICING_REGION` to pin) ➔ decode VIN ➔ Preview CTA and every plan show the region's currency sign and `/api/plans` amounts; JSON proof attached | `RegionalPool` |
 | **TC-PRICING-01** | Pricing Page E2E (`tests/pricing.spec.ts`) | `/pricing` ➔ Checkout ➔ Stripe test-card payment ➔ Stripe confirm & `update-payment` API responses ➔ Report Credits; amount & currency location-agnostic | `EmailGenerator`, Stripe test card |
 | **TC-PRICING-02** | Pricing Coupon (`tests/pricing.spec.ts`) | `?offer=get20` banner % == coupon API % == every plan price (baseline x (1 - %)) in Report & Build Sheet toggle modes; % is read from the site, never hard-coded | Live site |
 | **TC-PRICING-03** | Pricing Plans API Parity (`tests/pricing.spec.ts`) | Every Personal plan card (Report & Build Sheet) equals `/api/plans`: quantity, total and unit price | Live site |

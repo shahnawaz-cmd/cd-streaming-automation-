@@ -29,6 +29,7 @@ import {
   PricingParityModule,
   PricingFaqModule,
   PricingRegionalCurrencyModule,
+  RegionalPreviewCurrencyModule,
 } from '../modules';
 
 export type EnterpriseFixtures = {
@@ -65,6 +66,7 @@ export type EnterpriseFixtures = {
   pricingParityModule: PricingParityModule;
   pricingFaqModule: PricingFaqModule;
   pricingRegionalCurrencyModule: PricingRegionalCurrencyModule;
+  regionalPreviewCurrencyModule: RegionalPreviewCurrencyModule;
 };
 
 export const test = base.extend<EnterpriseFixtures>({
@@ -211,6 +213,10 @@ export const test = base.extend<EnterpriseFixtures>({
 
   pricingRegionalCurrencyModule: async ({ page, context, pricingPage }, use) => {
     await use(new PricingRegionalCurrencyModule(page, context, pricingPage));
+  },
+
+  regionalPreviewCurrencyModule: async ({ page, context, homePage, previewPage, previewCheckoutModule }, use) => {
+    await use(new RegionalPreviewCurrencyModule(page, context, homePage, previewPage, previewCheckoutModule));
   },
 
   clarityModule: async ({ browser }, use) => {

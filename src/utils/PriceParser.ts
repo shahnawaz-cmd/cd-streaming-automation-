@@ -15,7 +15,7 @@ export class PriceParser {
   private static readonly PERCENT_RE = /\d+(?:[.,]\d+)?\s*%/g;
   private static readonly SYMBOLS = '$€£¥₹₩₪₫₺₽₱฿₦₴';
   private static readonly ISO_CODES =
-    'CHF|EUR|USD|GBP|CAD|AUD|SEK|NOK|DKK|PKR|INR|AED|SAR|NZD|SGD|HKD|JPY|CNY|KRW|TWD|THB|MYR|IDR|PHP|VND|BRL|MXN|ARS|CLP|COP|PEN|ZAR|EGP|NGN|KES|PLN|CZK|HUF|RON|BGN|TRY|ILS|RUB|UAH|QAR|KWD|BHD|OMR|BDT|LKR|NPR';
+    'CHF|EUR|USD|GBP|CAD|AUD|SEK|NOK|DKK|PKR|INR|AED|SAR|NZD|SGD|HKD|JPY|CNY|KRW|TWD|THB|MYR|IDR|PHP|VND|BRL|MXN|ARS|CLP|COP|PEN|ZAR|EGP|NGN|KES|PLN|CZK|HUF|RON|BGN|TRY|ILS|RUB|UAH|QAR|KWD|BHD|OMR|BDT|LKR|NPR|CRC|PAB';
   private static readonly PRICE_TOKEN_RE = new RegExp(
     `(?:([A-Za-z]{1,3}[$€£¥₹]|[${PriceParser.SYMBOLS}]|(?:zł|Zł|Kč)(?=\\s|\\d)|\\b(?:[Rr]s\\.?|RM|Rp)(?=\\s|\\d)|\\b(?:[Kk]r|${PriceParser.ISO_CODES})\\b)\\s*)?(\\d+(?:[.,]\\d+)*)(?:\\s*([${PriceParser.SYMBOLS}]|(?:zł|Zł|Kč)(?!\\w)|\\b(?:[Rr]s\\.?|RM|Rp|[Kk]r|${PriceParser.ISO_CODES})\\b))?`,
     'g'

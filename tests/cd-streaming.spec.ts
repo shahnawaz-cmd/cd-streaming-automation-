@@ -1,6 +1,7 @@
 import { test } from '../src/fixtures';
 import { VinGenerator } from '../src/data/VinGenerator';
 import { CLARITY_TARGET } from '../src/config/env';
+import { pickRegion } from '../src/data/RegionalPool';
 
 test.describe('CD Streaming - Preview & Checkout', () => {
   test('TC-01: Modern 17-char VIN - Dynamic handling for Decoded vs Not-Found fallback', async ({ vinDecodeModule, modernDecodeHandler, previewPage, evidenceModule }, testInfo) => {
@@ -129,5 +130,12 @@ test.describe('CD Streaming - Preview & Checkout', () => {
     test.slow();
     const journey = await test.step(`Clarity ${CLARITY_TARGET.projectId} across Home -> Preview -> Checkout`, () => clarityModule.verifyJourney(CLARITY_TARGET));
     await test.step('Attach Clarity JSON telemetry', () => evidenceModule.recordProof(testInfo, 'Clarity-Proof', journey));
+  });
+
+  test('TC-19: Regional Currency - inject geo cookies, decode to Preview, match currency sign & backend prices (random region)', async ({ regionalPreviewCurrencyModule, evidenceModule }, testInfo) => {
+    test.slow();
+    const region = pickRegion();
+    const result = await test.step(`Simulate ${region.name} (${region.country}), decode a VIN and verify ${region.currency} on Preview`, () => regionalPreviewCurrencyModule.verifyPreviewCurrency(region));
+    await test.step('Attach regional currency JSON telemetry', () => evidenceModule.recordProof(testInfo, 'Regional-Currency-Proof', result));
   });
 });

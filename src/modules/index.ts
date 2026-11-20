@@ -31,6 +31,7 @@ export {
   PlansCouponComparisonResult,
   PlanSaveCheckItem,
 } from './PlansSaveTagModule';
+export { RegionalPreviewCurrencyModule, PreviewCurrencyResult } from './RegionalPreviewCurrencyModule';
 export { PricingParityModule, AudienceParity, BusinessTabResult, PlanParity } from './PricingParityModule';
 export { PricingFaqModule, PricingFaqResult } from './PricingFaqModule';
 export { PricingRegionalCurrencyModule, RegionalCurrencyResult } from './PricingRegionalCurrencyModule';
