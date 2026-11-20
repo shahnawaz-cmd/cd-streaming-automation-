@@ -25,3 +25,9 @@ export {
   ModernRevisitResult,
   ClassicEditYmmtRevisitResult,
 } from './RevisitBannerModule';
+export {
+  PlansSaveTagModule,
+  PlansSaveTagMatrixResult,
+  PlansCouponComparisonResult,
+  PlanSaveCheckItem,
+} from './PlansSaveTagModule';

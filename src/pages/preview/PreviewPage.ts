@@ -51,8 +51,10 @@ export class PreviewPage extends BasePage {
   }
 
   // Navigation
-  async openDirectly(vin: string, type: PreviewType = 'vhr'): Promise<void> {
-    await this.navigate(`/preview?vin=${vin}&wpPage=homepage&type=${type}`);
+  async openDirectly(vin: string, type: PreviewType = 'vhr', offer?: string): Promise<void> {
+    const params = new URLSearchParams({ vin, wpPage: 'homepage', type });
+    if (offer) params.set('offer', offer);
+    await this.navigate(`/preview?${params.toString()}`);
   }
 
   // Delegated conveniences

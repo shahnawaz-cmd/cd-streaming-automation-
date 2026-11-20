@@ -88,4 +88,13 @@ test.describe('CD Streaming - Preview & Checkout', () => {
     const classic = await test.step('New session Classic VIN -> Edit YMMT -> Home Revisit Banner -> Grab CTA -> Preview', () => revisitBannerModule.verifyClassicEditYmmtRevisitBanner());
     await test.step('Attach Revisit Banner JSON telemetry', () => evidenceModule.recordRevisitBannerProof(testInfo, modern, classic));
   });
+
+  test('TC-14: Plans "Save %" Tag Logic - Dynamic prices, currency & compounded Save % (Without vs. With Coupon)', async ({ plansSaveTagModule, evidenceModule }, testInfo) => {
+    const result = await test.step('Verify dynamic Save % tags, prices & CTA sync (Without vs. With Coupon across VHR & Sticker)', () =>
+      plansSaveTagModule.verifyPlansSaveTagMatrix()
+    );
+    await test.step('Attach Plans Save Tag JSON telemetry', () =>
+      evidenceModule.recordPlansSaveTagProof(testInfo, result)
+    );
+  });
 });

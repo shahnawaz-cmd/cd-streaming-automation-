@@ -13,8 +13,13 @@ export interface ParsedPrice {
  */
 export class PriceParser {
   private static readonly PERCENT_RE = /\d+(?:[.,]\d+)?\s*%/g;
-  private static readonly PRICE_TOKEN_RE =
-    /(?:([A-Za-z]{1,3}[$€£¥₹]|[$€£¥₹₩₪₫₺₽]|\b(?:Rs\.?(?=\s|\d)|(?:kr|CHF|EUR|USD|GBP|CAD|AUD|SEK|NOK|DKK|PKR|INR|AED|SAR)\b))\s*)?(\d+(?:[.,]\d+)*)(?:\s*([$€£¥₹₩₪₫₺₽]|\b(?:kr|CHF|EUR|USD|GBP|CAD|AUD|SEK|NOK|DKK|PKR|INR|AED|SAR)\b))?/gi;
+  private static readonly SYMBOLS = '$€£¥₹₩₪₫₺₽₱฿₦₴';
+  private static readonly ISO_CODES =
+    'CHF|EUR|USD|GBP|CAD|AUD|SEK|NOK|DKK|PKR|INR|AED|SAR|NZD|SGD|HKD|JPY|CNY|KRW|TWD|THB|MYR|IDR|PHP|VND|BRL|MXN|ARS|CLP|COP|PEN|ZAR|EGP|NGN|KES|PLN|CZK|HUF|RON|BGN|TRY|ILS|RUB|UAH|QAR|KWD|BHD|OMR|BDT|LKR|NPR';
+  private static readonly PRICE_TOKEN_RE = new RegExp(
+    `(?:([A-Za-z]{1,3}[$€£¥₹]|[${PriceParser.SYMBOLS}]|(?:zł|Zł|Kč)(?=\\s|\\d)|\\b(?:[Rr]s\\.?|RM|Rp)(?=\\s|\\d)|\\b(?:[Kk]r|${PriceParser.ISO_CODES})\\b)\\s*)?(\\d+(?:[.,]\\d+)*)(?:\\s*([${PriceParser.SYMBOLS}]|(?:zł|Zł|Kč)(?!\\w)|\\b(?:[Rr]s\\.?|RM|Rp|[Kk]r|${PriceParser.ISO_CODES})\\b))?`,
+    'g'
+  );
 
   /**
    * Normalizes a formatted numeric string into a JS float regardless of locale separators.
@@ -53,12 +58,13 @@ export class PriceParser {
 
   private static extractAll(rawText: string): ParsedPrice[] {
     const cleaned = rawText
+      .replace(/(?<=\d)[\u00A0\u202F](?=\d{3}(?:\D|$))/g, '')
       .replace(PriceParser.PERCENT_RE, ' ')
       .replace(/\s+/g, ' ')
       .trim();
 
     const results: ParsedPrice[] = [];
-    const regex = new RegExp(PriceParser.PRICE_TOKEN_RE.source, 'gi');
+    const regex = new RegExp(PriceParser.PRICE_TOKEN_RE.source, PriceParser.PRICE_TOKEN_RE.flags);
     let match: RegExpExecArray | null;
 
     while ((match = regex.exec(cleaned)) !== null) {
@@ -139,5 +145,16 @@ export class PriceParser {
       Math.abs(actual - expected),
       `${label}: expected ${expected.toFixed(2)}, received ${actual.toFixed(2)}`
     ).toBeLessThanOrEqual(tolerance);
+  }
+
+  /**
+   * Scale-aware assertion tolerance for converted currencies and rounding deltas.
+   */
+  static dynamicTolerance(
+    expectedAmount: number,
+    relativeRatio = 0.01,
+    minFloor = 0.05
+  ): number {
+    return Math.max(minFloor, Math.abs(expectedAmount) * relativeRatio);
   }
 }

@@ -10,6 +10,7 @@ import type { UpsellMatrixResult } from './UpsellModule';
 import type { PlanAndUpsellSelectionResult } from './PlanSelectionModule';
 import type { CheckoutPriceSyncResult } from './CheckoutPriceSyncModule';
 import type { ModernRevisitResult, ClassicEditYmmtRevisitResult } from './RevisitBannerModule';
+import type { PlansSaveTagMatrixResult, PlansCouponComparisonResult } from './PlansSaveTagModule';
 import { SupportedLocale } from '../data/LocaleDictionary';
 import { Logger } from '../utils/Logger';
 
@@ -470,6 +471,75 @@ export class EvidenceModule {
     });
     this.logger.info(
       `📄 Attached Revisit Banner JSON telemetry: Modern(${modern.vin}, ${modern.previewType}) & Classic(${classic.vin})`
+    );
+  }
+
+  private formatMoney(amount: number, token: string): string {
+    const formatted = Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
+    if (!token) return formatted;
+    return /[A-Za-z]$/.test(token) ? `${token} ${formatted}` : `${token}${formatted}`;
+  }
+
+  private formatSaveTag(savePercent: number | null, isSubscription: boolean): string {
+    if (isSubscription) return 'Excluded';
+    return savePercent === null ? 'No tag' : `Save ${savePercent}%`;
+  }
+
+  private summarizePlansSection(section: PlansCouponComparisonResult) {
+    const subtitleMaxSave =
+      section.baselineSubtitleMaxSave !== null && section.couponSubtitleMaxSave !== null
+        ? `${section.baselineSubtitleMaxSave}% -> ${section.couponSubtitleMaxSave}%`
+        : section.couponSubtitleMaxSave !== null
+          ? `${section.couponSubtitleMaxSave}%`
+          : null;
+
+    const currencyNote =
+      section.baselineCurrency === section.couponCurrency
+        ? section.couponCurrency
+        : `${section.baselineCurrency} -> ${section.couponCurrency} (x${section.conversionFactor})`;
+
+    return {
+      ...(currencyNote ? { currency: currencyNote } : {}),
+      ...(subtitleMaxSave !== null ? { subtitleMaxSave } : {}),
+      plans: section.planChecks.map((p) => ({
+        plan: p.label,
+        withoutCoupon: `${this.formatMoney(p.baselineTotal, section.baselineCurrency)} (${this.formatSaveTag(p.baselineSavePercent, p.isSubscription)})`,
+        withCoupon: `${this.formatMoney(p.couponTotal, section.couponCurrency)} (${this.formatSaveTag(p.couponSavePercent, p.isSubscription)})`,
+        cta: this.formatMoney(p.ctaSyncedAmount, section.couponCurrency),
+      })),
+    };
+  }
+
+  /**
+   * Attaches compact, scannable JSON telemetry for dynamic Plans "Save %" tag & coupon math.
+   */
+  async recordPlansSaveTagProof(
+    testInfo: TestInfo,
+    result: PlansSaveTagMatrixResult
+  ): Promise<void> {
+    const testPrefix = testInfo.title.slice(0, 5);
+    const currency =
+      result.vhr.baselineCurrency === result.vhr.couponCurrency
+        ? result.vhr.couponCurrency
+        : `${result.vhr.baselineCurrency} -> ${result.vhr.couponCurrency} (x${result.vhr.conversionFactor})`;
+
+    const payload = {
+      status: 'PASSED',
+      vin: result.vin,
+      coupon: `${result.offerCode} (${Math.round(result.vhr.effectiveCouponRate * 100)}% off)`,
+      currency,
+      vhr: this.summarizePlansSection(result.vhr),
+      sticker: this.summarizePlansSection(result.sticker),
+      capturedAt: new Date().toISOString(),
+    };
+
+    const body = JSON.stringify(payload, null, 2);
+    await testInfo.attach(`${testPrefix}-Plans-Save-Tag-Proof.json`, {
+      body,
+      contentType: 'application/json',
+    });
+    this.logger.info(
+      `📄 Attached compact Plans Save Tag JSON telemetry for VIN: ${result.vin} (offer=${result.offerCode})`
     );
   }
 }
