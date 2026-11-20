@@ -8,10 +8,7 @@ export interface RegionalConfig {
   currency: string;
 }
 
-/**
- * Non-USD / non-CAD regions the Dev backend localizes pricing for.
- * (GB is deliberately absent: Dev currently prices United Kingdom visitors in USD.)
- */
+/** Non-USD / non-CAD regions the Dev backend localizes pricing for. */
 export const REGIONAL_POOL: RegionalConfig[] = [
   { country: 'KR', ip: '79.110.55.34', name: 'South Korea', currency: 'KRW' },
   { country: 'DE', ip: '85.214.132.117', name: 'Germany', currency: 'EUR' },
