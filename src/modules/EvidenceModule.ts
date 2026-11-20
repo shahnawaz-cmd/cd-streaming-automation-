@@ -11,6 +11,7 @@ import type { PlanAndUpsellSelectionResult } from './PlanSelectionModule';
 import type { CheckoutPriceSyncResult } from './CheckoutPriceSyncModule';
 import type { ModernRevisitResult, ClassicEditYmmtRevisitResult } from './RevisitBannerModule';
 import type { PlansSaveTagMatrixResult, PlansCouponComparisonResult } from './PlansSaveTagModule';
+import type { EmailCacheScenarioResult } from './EmailCacheModule';
 import { SupportedLocale } from '../data/LocaleDictionary';
 import { Logger } from '../utils/Logger';
 
@@ -541,5 +542,15 @@ export class EvidenceModule {
     this.logger.info(
       `📄 Attached compact Plans Save Tag JSON telemetry for VIN: ${result.vin} (offer=${result.offerCode})`
     );
+  }
+
+  /**
+   * Attaches compact JSON telemetry for Preview email cache / autofill scenarios.
+   */
+  async recordEmailCacheProof(testInfo: TestInfo, scenarios: EmailCacheScenarioResult[]): Promise<void> {
+    const testPrefix = testInfo.title.slice(0, 5);
+    const body = JSON.stringify({ status: 'PASSED', scenarios, capturedAt: new Date().toISOString() }, null, 2);
+    await testInfo.attach(`${testPrefix}-Email-Cache-Proof.json`, { body, contentType: 'application/json' });
+    this.logger.info(`📄 Attached Email Cache JSON telemetry (${scenarios.map((s) => s.scenario).join(', ')})`);
   }
 }

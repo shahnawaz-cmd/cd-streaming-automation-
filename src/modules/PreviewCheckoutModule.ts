@@ -29,7 +29,10 @@ export class PreviewCheckoutModule {
       .packageSection()
       .locator('button[aria-busy]:not([disabled])')
       .first();
-    const notFoundSearchInput = this.page.locator('main input[type="text"]').first();
+    const notFoundSearchInput = this.page
+      .locator('main input[type="text"]')
+      .or(this.previewPage.notFound.heading())
+      .first();
 
     const outcome = await Promise.race([
       decodedCta.waitFor({ state: 'visible' }).then(() => 'DECODED' as const),

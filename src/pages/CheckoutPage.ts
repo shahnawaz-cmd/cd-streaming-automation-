@@ -137,15 +137,7 @@ export class CheckoutPage extends BasePage {
     const parsedPay = PriceParser.parseLastPrice(payButtonText);
 
     const url = this.page.url();
-    const dataParam = new URL(url).searchParams.get('data');
-    let decodedData: CheckoutDecodedPayload | null = null;
-    if (dataParam) {
-      try {
-        decodedData = JSON.parse(Buffer.from(dataParam, 'base64').toString('utf8')) as CheckoutDecodedPayload;
-      } catch {
-        decodedData = null;
-      }
-    }
+    const decodedData = this.readDecodedPayload();
 
     return {
       url,
@@ -158,6 +150,19 @@ export class CheckoutPage extends BasePage {
       payButtonAmount: parsedPay.amount,
       currencyToken: parsedPay.currencyToken,
     };
+  }
+
+  /**
+   * Decodes the base64 `data` checkout URL payload (vin, email, code, price, ...). Null if absent/invalid.
+   */
+  readDecodedPayload(): CheckoutDecodedPayload | null {
+    const dataParam = new URL(this.page.url()).searchParams.get('data');
+    if (!dataParam) return null;
+    try {
+      return JSON.parse(Buffer.from(dataParam, 'base64').toString('utf8')) as CheckoutDecodedPayload;
+    } catch {
+      return null;
+    }
   }
 
   /**

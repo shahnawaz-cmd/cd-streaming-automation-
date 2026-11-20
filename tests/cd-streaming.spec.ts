@@ -97,4 +97,12 @@ test.describe('CD Streaming - Preview & Checkout', () => {
       evidenceModule.recordPlansSaveTagProof(testInfo, result)
     );
   });
+
+  test('TC-15: Preview Email Cache - Same-session prefill, new-session validation & logged-in autofill with direct Checkout', async ({ emailCacheModule, evidenceModule }, testInfo) => {
+    test.slow();
+    const sameSession = await test.step('Same session: email cached & prefilled on back, reload & new VIN -> direct Checkout', () => emailCacheModule.verifySameSessionPrefill());
+    const newSession = await test.step('New session: no prefill, empty & invalid email blocked, valid email -> Checkout', () => emailCacheModule.verifyNewSessionValidation());
+    const loggedIn = await test.step('Logged-in: account email auto-filled -> direct Checkout', () => emailCacheModule.verifyLoggedInAutofill());
+    await test.step('Attach Email Cache JSON telemetry', () => evidenceModule.recordEmailCacheProof(testInfo, [sameSession, newSession, loggedIn]));
+  });
 });

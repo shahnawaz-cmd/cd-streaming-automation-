@@ -46,7 +46,10 @@ export class PreviewHeaderComponent {
     this.packageSection().locator('button[aria-controls="pv-delivery"]').first();
 
   deliveryEmailInput = (): Locator =>
-    this.packageSection().locator('input[type="email"]').first();
+    this.packageSection()
+      .locator('input[type="email"]')
+      .or(this.page.locator('#pv-delivery input[type="email"], #pv-delivery input[name*="email" i]'))
+      .first();
 
   /**
    * Resolves the Access Record CTA with autonomous self-healing.

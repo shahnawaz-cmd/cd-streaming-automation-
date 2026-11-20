@@ -31,3 +31,4 @@ export {
   PlansCouponComparisonResult,
   PlanSaveCheckItem,
 } from './PlansSaveTagModule';
+export { EmailCacheModule, EmailCacheScenarioResult, EmailCacheCheck, PREVIEW_EMAIL_CACHE_KEY } from './EmailCacheModule';

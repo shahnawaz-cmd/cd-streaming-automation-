@@ -19,6 +19,7 @@ import {
   CheckoutPriceSyncModule,
   RevisitBannerModule,
   PlansSaveTagModule,
+  EmailCacheModule,
 } from '../modules';
 
 export type EnterpriseFixtures = {
@@ -44,6 +45,7 @@ export type EnterpriseFixtures = {
   checkoutPriceSyncModule: CheckoutPriceSyncModule;
   revisitBannerModule: RevisitBannerModule;
   plansSaveTagModule: PlansSaveTagModule;
+  emailCacheModule: EmailCacheModule;
 };
 
 export const test = base.extend<EnterpriseFixtures>({
@@ -154,6 +156,10 @@ export const test = base.extend<EnterpriseFixtures>({
 
   plansSaveTagModule: async ({ browser, page, previewPage, previewCheckoutModule }, use) => {
     await use(new PlansSaveTagModule(browser, page, previewPage, previewCheckoutModule));
+  },
+
+  emailCacheModule: async ({ browser, page, previewPage, checkoutPage, previewCheckoutModule }, use) => {
+    await use(new EmailCacheModule(browser, page, previewPage, checkoutPage, previewCheckoutModule));
   },
 });
 
