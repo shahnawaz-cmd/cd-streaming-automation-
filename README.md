@@ -46,7 +46,8 @@ CD Streaming Framework
    - Amount and currency are compared dynamically (minor units, zero-decimal aware), so it works for any location-based currency. Runs against dev (Stripe test mode) only.
 7. **Pricing Coupon, Dynamic Discount (`TC-PRICING-02`)**: the discount percentage is never hard-coded; it is read from the banner and the `validate-coupon` API (which must agree) and every plan price in both toggle modes is checked against its own no-coupon baseline.
 8. **Pricing Content & Localization (`TC-PRICING-03..06`)**: plan cards are compared with the backend `/api/plans` for Personal and Business in both Report and Build Sheet modes; the FAQ accordion and sample-report link are exercised; and injected geo cookies prove regional currency pricing (amounts compared numerically, so any currency symbol works).
-9. **Microsoft Clarity Verification (`TC-18`)**: Runs on Dev in an isolated session and verifies the project tag, `window.clarity`, `_clck`/`_clsk` cookies and `/collect` beacons on Home ➔ Preview ➔ Checkout.
+9. **Regional Currency on Preview (`TC-19`)**: the streaming flow in a simulated country: geo cookies are injected first, a VIN is decoded to Preview, then the Access CTA and every plan must show that region's currency sign (derived from `Intl`, no hardcoded symbols) and the converted amounts from `/api/plans`. JSON proof is attached.
+10. **Microsoft Clarity Verification (`TC-18`)**: Runs on Dev in an isolated session and verifies the project tag, `window.clarity`, `_clck`/`_clsk` cookies and `/collect` beacons on Home ➔ Preview ➔ Checkout.
 
 ---
 
@@ -109,6 +110,8 @@ cp .env.example .env
 
 Optional: `CLARITY_PROJECT_ID` overrides the Dev Microsoft Clarity project id used by TC-18.
 
+Optional: `PRICING_REGION` (`KR` `DE` `CR` `CL` `SA` `NZ` `PA` `ZA` `TW`) pins the region used by TC-19 and TC-PRICING-06; when unset a random region is picked each run.
+
 ---
 
 ## 🧪 Running Tests
@@ -126,8 +129,9 @@ npx playwright test -g "TC-02"
 npx playwright test -g "TC-03"
 npx playwright test -g "TC-1[5-7]"   # email cache, referrer/UTM cookies, dual coupon
 npx playwright test tests/pricing.spec.ts   # independent Pricing suite (purchase, coupon, API parity, tabs, FAQ, regional currency)
-npx playwright test -g "TC-PRICING-06"     # regional currency (random region)
-$env:PRICING_REGION="DE"; npx playwright test -g "TC-PRICING-06"   # pin a region: KR DE CR CL SA NZ PA ZA TW
+npx playwright test -g "TC-19"             # regional currency on Preview (random region)
+npx playwright test -g "TC-PRICING-06"     # regional currency on /pricing (random region)
+$env:PRICING_REGION="DE"; npx playwright test -g "TC-19"   # pin a region (TC-19 or TC-PRICING-06)
 
 # View HTML Test Report
 npx playwright show-report
