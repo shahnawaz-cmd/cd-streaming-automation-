@@ -5,7 +5,7 @@ import { EmailGenerator } from '../data/EmailGenerator';
 import { VinGenerator } from '../data/VinGenerator';
 import { Logger } from '../utils/Logger';
 
-export type LocalizedDecodeOutcome = 'DECODED' | 'NOT_FOUND';
+export type LocalizedDecodeOutcome = 'DECODED' | 'NOT_FOUND' | 'LOOKUP_FAILED';
 
 /**
  * Layer 3: PreviewCheckoutModule
@@ -35,9 +35,12 @@ export class PreviewCheckoutModule {
       .or(this.previewPage.notFound.heading())
       .first();
 
+    const lookupFailed = this.previewPage.notFound.lookupFailedHeading();
+
     const outcome = await Promise.race([
       decodedCta.waitFor({ state: 'visible' }).then(() => 'DECODED' as const),
       notFoundSearchInput.waitFor({ state: 'visible' }).then(() => 'NOT_FOUND' as const),
+      lookupFailed.waitFor({ state: 'visible' }).then(() => 'LOOKUP_FAILED' as const),
     ]);
 
     this.logger.info(`Localized decode outcome resolved: ${outcome}`);
@@ -55,11 +58,12 @@ export class PreviewCheckoutModule {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       const vin = await VinGenerator.modernFromMongo();
       await open(vin, attempt);
-      if ((await this.waitForLocalizedDecodeOutcome()) === 'DECODED') {
+      const outcome = await this.waitForLocalizedDecodeOutcome();
+      if (outcome === 'DECODED') {
         this.logger.pass(`Decoded Modern VIN ${vin} (attempt ${attempt})`);
         return vin;
       }
-      this.logger.warn(`Attempt ${attempt}/${maxAttempts}: Modern VIN ${vin} returned NOT_FOUND, retrying...`);
+      this.logger.warn(`Attempt ${attempt}/${maxAttempts}: Modern VIN ${vin} returned ${outcome}, retrying...`);
     }
     throw new Error(`[PreviewCheckoutModule] Failed to decode a Modern VIN after ${maxAttempts} attempts`);
   }

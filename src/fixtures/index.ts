@@ -23,6 +23,7 @@ import {
   EmailCacheModule,
   TrackingCookieModule,
   DualCouponModule,
+  ClarityModule,
 } from '../modules';
 
 export type EnterpriseFixtures = {
@@ -51,6 +52,7 @@ export type EnterpriseFixtures = {
   emailCacheModule: EmailCacheModule;
   trackingCookieModule: TrackingCookieModule;
   dualCouponModule: DualCouponModule;
+  clarityModule: ClarityModule;
 };
 
 export const test = base.extend<EnterpriseFixtures>({
@@ -169,6 +171,10 @@ export const test = base.extend<EnterpriseFixtures>({
 
   dualCouponModule: async ({ page, homePage, previewPage, previewCheckoutModule, exitIntentModule }, use) => {
     await use(new DualCouponModule(page, homePage, previewPage, previewCheckoutModule, exitIntentModule));
+  },
+
+  clarityModule: async ({ browser }, use) => {
+    await use(new ClarityModule(browser));
   },
 });
 

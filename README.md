@@ -63,6 +63,7 @@ CD Streaming Framework
 | **TC-15** | Preview Email Cache | Same-session prefill, new-session validation & logged-in autofill with direct Checkout | `EmailGenerator`, `GarageCredentialsGenerator` |
 | **TC-16** | Referrer & UTM Cookies | `utm_details` (UTM landing) vs `referrer` (base URL from Google) in isolated sessions | Live MongoDB Pool |
 | **TC-17** | Dual Coupon | Home `offer=get20` ➔ Preview exit-intent banner still triggers | Live MongoDB Pool |
+| **TC-18** | Microsoft Clarity (Prod & Dev) | Project tag, `_clck`/`_clsk` cookies, `/collect` beacons & same user across Home ➔ Preview ➔ Checkout | Live MongoDB Pool |
 
 ---
 

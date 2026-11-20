@@ -31,6 +31,7 @@ export {
   PlansCouponComparisonResult,
   PlanSaveCheckItem,
 } from './PlansSaveTagModule';
+export { ClarityModule, ClarityJourneyResult, ClarityStageSnapshot } from './ClarityModule';
 export { TrackingCookieModule, TrackingCookieResult } from './TrackingCookieModule';
 export { DualCouponModule, DualCouponResult } from './DualCouponModule';
 export { EmailCacheModule, EmailCacheScenarioResult, EmailCacheCheck, PREVIEW_EMAIL_CACHE_KEY } from './EmailCacheModule';

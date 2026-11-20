@@ -1,5 +1,7 @@
 import { test } from '../src/fixtures';
 import { VinGenerator } from '../src/data/VinGenerator';
+import { CLARITY_TARGETS } from '../src/config/env';
+import type { ClarityJourneyResult } from '../src/modules';
 
 test.describe('CD Streaming - Preview & Checkout', () => {
   test('TC-01: Modern 17-char VIN - Dynamic handling for Decoded vs Not-Found fallback', async ({ vinDecodeModule, modernDecodeHandler, previewPage, evidenceModule }, testInfo) => {
@@ -122,5 +124,14 @@ test.describe('CD Streaming - Preview & Checkout', () => {
     test.slow();
     const result = await test.step('Apply get20 on Homepage, decode VIN, trigger exit-intent banner on Preview', () => dualCouponModule.verifyExitIntentWithHomeCoupon('get20'));
     await test.step('Attach dual coupon JSON telemetry', () => evidenceModule.recordProof(testInfo, 'Dual-Coupon-Proof', result));
+  });
+
+  test('TC-18: Microsoft Clarity - tag, cookies & beacons active Home -> Preview -> Checkout (Prod & Dev)', async ({ clarityModule, evidenceModule }, testInfo) => {
+    test.slow();
+    const journeys: ClarityJourneyResult[] = [];
+    for (const target of CLARITY_TARGETS) {
+      journeys.push(await test.step(`${target.name} (${target.baseURL}): Clarity ${target.projectId} across Home -> Preview -> Checkout`, () => clarityModule.verifyJourney(target)));
+    }
+    await test.step('Attach Clarity JSON telemetry', () => evidenceModule.recordProof(testInfo, 'Clarity-Proof', { journeys }));
   });
 });

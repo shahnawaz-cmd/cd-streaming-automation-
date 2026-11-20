@@ -36,6 +36,13 @@ export class NotFoundFallbackComponent {
   searchBtn = (): Locator =>
     this.page.locator('button:has-text("Search")').first();
 
+  /** Transient backend failure state: "We couldn't look up this VIN right now ... Try again". */
+  lookupFailedHeading = (): Locator =>
+    this.page
+      .getByText(/couldn.t look up this VIN right now/i)
+      .or(this.page.getByRole('button', { name: /^Try again$/i }))
+      .first();
+
   async isVisible(): Promise<boolean> {
     return this.heading().isVisible().catch(() => false);
   }
