@@ -31,6 +31,9 @@ export {
   PlansCouponComparisonResult,
   PlanSaveCheckItem,
 } from './PlansSaveTagModule';
+export { PricingParityModule, AudienceParity, BusinessTabResult, PlanParity } from './PricingParityModule';
+export { PricingFaqModule, PricingFaqResult } from './PricingFaqModule';
+export { PricingRegionalCurrencyModule, RegionalCurrencyResult } from './PricingRegionalCurrencyModule';
 export { PricingCouponModule, PricingCouponResult, PlanDiscountCheck } from './PricingCouponModule';
 export { PricingPurchaseModule, PricingPurchaseResult, StripeConfirmProof, UpdatePaymentProof } from './PricingPurchaseModule';
 export { ClarityModule, ClarityJourneyResult, ClarityStageSnapshot } from './ClarityModule';

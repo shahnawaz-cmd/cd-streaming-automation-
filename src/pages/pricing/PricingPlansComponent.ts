@@ -2,6 +2,7 @@ import { expect, Locator, Page } from '@playwright/test';
 import { PriceParser } from '../../utils/PriceParser';
 
 export type PricingMode = 'report' | 'sticker';
+export type PricingAudience = 'personal' | 'business';
 
 export interface PlanCardSnapshot {
   name: string;
@@ -55,6 +56,33 @@ export class PricingPlansComponent {
       .or(this.page.locator('button[role="switch"]'))
       .or(this.page.locator('main [aria-checked][data-state]'))
       .first();
+
+  /** The plan card selling exactly `count` credits/build sheets ("1 Credit", "10 Credits", ...). */
+  cardByCount = (count: number): Locator =>
+    this.cards()
+      .filter({ hasText: new RegExp(`^\\s*${count}\\s`) })
+      .first();
+
+  /** "Personal" / "Business" audience tab. */
+  audienceTab = (audience: PricingAudience): Locator => {
+    const label = audience === 'personal' ? /^Personal/i : /^Business/i;
+    return this.page
+      .getByRole('button', { name: label })
+      .or(this.page.locator('main button').filter({ hasText: label }))
+      .first();
+  };
+
+  /**
+   * Switches to the other audience and waits until the plan cards re-render.
+   * Callers move Personal -> Business -> Personal, so a click always changes the cards.
+   */
+  async selectAudience(audience: PricingAudience): Promise<void> {
+    const before = await this.cards().allInnerTexts();
+    await this.audienceTab(audience).click();
+    await expect
+      .poll(() => this.cards().allInnerTexts(), { message: `plan cards switch to ${audience} plans` })
+      .not.toEqual(before);
+  }
 
   /** Flips the toggle (if needed) and waits until the plan cards re-render for the chosen mode. */
   async selectMode(mode: PricingMode): Promise<void> {

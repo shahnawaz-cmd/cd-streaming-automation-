@@ -11,12 +11,12 @@ Strictly engineered according to the **8-Layer Enterprise Architecture** with Pa
 ```
 CD Streaming Framework
 ├── Layer 1: Config            (src/config/)     - Environment configs, timeouts, and parallel global setup
-├── Layer 2: Modular POM       (src/pages/)      - Sub-component based Page Objects (Header, Modal, Fallbacks)
+├── Layer 2: Modular POM       (src/pages/)      - Sub-component based Page Objects per page (`preview/`, `home/`, `pricing/`: plans, coupon banner, FAQ, email dialog)
 ├── Layer 3: Workflows         (src/modules/)    - Business actions, race condition handlers & exit intent
-├── Layer 4: Test Data         (src/data/)       - MongoDB live VIN pool, Classic VIN generator & Anti-bounce emails
-├── Layer 5: Utilities         (src/utils/)      - Self-healing locator agent, isolated browser sessions & structured logging
+├── Layer 4: Test Data         (src/data/)       - MongoDB live VIN pool, Classic VIN generator, Anti-bounce emails, Stripe test card & regional (geo) pool
+├── Layer 5: Utilities         (src/utils/)      - Self-healing locator agent, isolated browser sessions, plans-API client, price parser & structured logging
 ├── Layer 6: Fixtures          (src/fixtures/)   - Dependency injection & bot fingerprint stripping
-├── Layer 7: Test Specs        (tests/)          - `cd-streaming.spec.ts` (TC-01..TC-18) + independent `pricing.spec.ts` (TC-PRICING-01)
+├── Layer 7: Test Specs        (tests/)          - `cd-streaming.spec.ts` (TC-01..TC-18) + independent `pricing.spec.ts` (TC-PRICING-01..06)
 └── Layer 8: Evidence          (src/modules/)    - Focused element snapshots (~25 KB) & JSON telemetry (1 KB)
 ```
 
@@ -45,7 +45,8 @@ CD Streaming Framework
    - Captures and asserts the Stripe `payment_intents/{id}/confirm` response (`succeeded`, test mode, amount & currency) and the site's `/api/update-payment` response (`success`, Report Credits = 1); account token and client secret are redacted from the attached JSON.
    - Amount and currency are compared dynamically (minor units, zero-decimal aware), so it works for any location-based currency. Runs against dev (Stripe test mode) only.
 7. **Pricing Coupon, Dynamic Discount (`TC-PRICING-02`)**: the discount percentage is never hard-coded; it is read from the banner and the `validate-coupon` API (which must agree) and every plan price in both toggle modes is checked against its own no-coupon baseline.
-8. **Microsoft Clarity Verification (`TC-18`)**: Runs on Dev in an isolated session and verifies the project tag, `window.clarity`, `_clck`/`_clsk` cookies and `/collect` beacons on Home ➔ Preview ➔ Checkout.
+8. **Pricing Content & Localization (`TC-PRICING-03..06`)**: plan cards are compared with the backend `/api/plans` for Personal and Business in both Report and Build Sheet modes; the FAQ accordion and sample-report link are exercised; and injected geo cookies prove regional currency pricing (amounts compared numerically, so any currency symbol works).
+9. **Microsoft Clarity Verification (`TC-18`)**: Runs on Dev in an isolated session and verifies the project tag, `window.clarity`, `_clck`/`_clsk` cookies and `/collect` beacons on Home ➔ Preview ➔ Checkout.
 
 ---
 
@@ -73,6 +74,10 @@ CD Streaming Framework
 | **TC-18** | Microsoft Clarity (Dev) | Project tag, `_clck`/`_clsk` cookies, `/collect` beacons & same user across Home ➔ Preview ➔ Checkout | Live MongoDB Pool |
 | **TC-PRICING-01** | Pricing Page E2E (`tests/pricing.spec.ts`) | `/pricing` ➔ Checkout ➔ Stripe test-card payment ➔ Stripe confirm & `update-payment` API responses ➔ Report Credits; amount & currency location-agnostic | `EmailGenerator`, Stripe test card |
 | **TC-PRICING-02** | Pricing Coupon (`tests/pricing.spec.ts`) | `?offer=get20` banner % == coupon API % == every plan price (baseline x (1 - %)) in Report & Build Sheet toggle modes; % is read from the site, never hard-coded | Live site |
+| **TC-PRICING-03** | Pricing Plans API Parity (`tests/pricing.spec.ts`) | Every Personal plan card (Report & Build Sheet) equals `/api/plans`: quantity, total and unit price | Live site |
+| **TC-PRICING-04** | Pricing Personal / Business Tabs | Personal ➔ Business ➔ Personal: each tab matches its own `/api/plans`, Business differs, Personal restored | Live site |
+| **TC-PRICING-05** | Pricing FAQ & Sample Report | All FAQ items expand (non-empty answer) and collapse; sample report link opens `/sample-reports` in a new tab | Live site |
+| **TC-PRICING-06** | Regional Currency | `cwa_ip`/`cwa_country` cookies for a random region (9-region pool, `PRICING_REGION=DE` to pin): API currency, `usd_price x rate` and the amount on the card all agree | `RegionalPool` |
 
 ---
 
@@ -119,7 +124,9 @@ npx playwright test -g "TC-01"
 npx playwright test -g "TC-02"
 npx playwright test -g "TC-03"
 npx playwright test -g "TC-1[5-7]"   # email cache, referrer/UTM cookies, dual coupon
-npx playwright test tests/pricing.spec.ts   # independent Pricing page E2E (Stripe payment)
+npx playwright test tests/pricing.spec.ts   # independent Pricing suite (purchase, coupon, API parity, tabs, FAQ, regional currency)
+npx playwright test -g "TC-PRICING-06"     # regional currency (random region)
+$env:PRICING_REGION="DE"; npx playwright test -g "TC-PRICING-06"   # pin a region: KR DE CR CL SA NZ PA ZA TW
 
 # View HTML Test Report
 npx playwright show-report

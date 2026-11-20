@@ -96,6 +96,16 @@ export class PriceParser {
   }
 
   /**
+   * Every numeric amount in a text, regardless of currency symbol/code ("₩44,745" -> 44745, "€27,29" -> 27.29).
+   * Use when the currency token may be one the parser does not know (CRC, PAB, ...).
+   */
+  static numbersIn(rawText: string): number[] {
+    return (rawText.match(/\d[\d.,  ]*/g) ?? [])
+      .map((token) => PriceParser.normalizeNumber(token.replace(/[.,  ]+$/, '')))
+      .filter((n) => !Number.isNaN(n));
+  }
+
+  /**
    * Extracts the final price from a CTA or total line (e.g., "Access Vehicle History • $54.99", "Pay €39.99").
    */
   static parseLastPrice(rawText: string): ParsedPrice {

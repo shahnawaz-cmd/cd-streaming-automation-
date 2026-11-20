@@ -10,3 +10,4 @@ export {
   ENGLISH_CORE_LEAK_MARKERS,
 } from './LocaleDictionary';
 export { STRIPE_TEST_CARD } from './StripeTestCard';
+export { REGIONAL_POOL, RegionalConfig, pickRegion } from './RegionalPool';

@@ -3,21 +3,24 @@ import { BasePage } from '../BasePage';
 import { PricingPlansComponent } from './PricingPlansComponent';
 import { PricingCouponBannerComponent } from './PricingCouponBannerComponent';
 import { PricingEmailDialogComponent } from './PricingEmailDialogComponent';
+import { PricingFaqComponent } from './PricingFaqComponent';
 
 /**
  * Layer 2: PricingPage (/pricing)
- * Thin page object composing focused components: plan cards & toggle, coupon banner and the email dialog.
+ * Thin page object composing focused components: plan cards & toggles, coupon banner, email dialog and FAQ.
  */
 export class PricingPage extends BasePage {
   readonly plans: PricingPlansComponent;
   readonly coupon: PricingCouponBannerComponent;
   readonly emailDialog: PricingEmailDialogComponent;
+  readonly faq: PricingFaqComponent;
 
   constructor(page: Page) {
     super(page);
     this.plans = new PricingPlansComponent(page);
     this.coupon = new PricingCouponBannerComponent(page);
     this.emailDialog = new PricingEmailDialogComponent(page);
+    this.faq = new PricingFaqComponent(page);
   }
 
   heading = (): Locator => this.page.getByRole('heading', { level: 1 }).or(this.page.locator('main h1')).first();
