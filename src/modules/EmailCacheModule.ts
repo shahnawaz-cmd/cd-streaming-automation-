@@ -1,4 +1,4 @@
-import { Browser, BrowserContext, expect, Page } from '@playwright/test';
+import { Browser, expect, Page } from '@playwright/test';
 import { PreviewPage } from '../pages/preview/PreviewPage';
 import { CheckoutPage } from '../pages/CheckoutPage';
 import { CdmaGaragePage } from '../pages/cdma/CdmaGaragePage';
@@ -6,8 +6,7 @@ import { ExitIntentModalComponent } from '../pages/preview/ExitIntentModalCompon
 import { PreviewCheckoutModule } from './PreviewCheckoutModule';
 import { EmailGenerator } from '../data/EmailGenerator';
 import { GarageCredentialsGenerator } from '../data/GarageCredentialsGenerator';
-import { VinGenerator } from '../data/VinGenerator';
-import { ENV } from '../config/env';
+import { BrowserSession } from '../utils/BrowserSession';
 import { Logger } from '../utils/Logger';
 
 /** sessionStorage key the Preview page uses to cache the delivery email (per tab/session). */
@@ -62,12 +61,7 @@ export class EmailCacheModule {
 
   /** Runs `action` in a brand-new browser context (fresh cookies + sessionStorage), always closing it. */
   private async inNewSession<T>(action: (s: PreviewSession) => Promise<T>): Promise<T> {
-    const context: BrowserContext = await this.browser.newContext({
-      baseURL: ENV.baseURL,
-      viewport: { width: 1280, height: 720 },
-      locale: 'en-US',
-    });
-    await context.addInitScript(() => Object.defineProperty(navigator, 'webdriver', { get: () => undefined }));
+    const context = await BrowserSession.newContext(this.browser);
     try {
       const page = await context.newPage();
       const preview = new PreviewPage(page);
@@ -78,15 +72,8 @@ export class EmailCacheModule {
     }
   }
 
-  private async decodeFreshModernVin(s: PreviewSession): Promise<string> {
-    const maxAttempts = 4;
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      const vin = await VinGenerator.modernFromMongo();
-      await s.preview.openDirectly(vin, 'vhr');
-      if ((await s.flow.waitForLocalizedDecodeOutcome()) === 'DECODED') return vin;
-      this.logger.warn(`Attempt ${attempt}/${maxAttempts}: Modern VIN ${vin} returned NOT_FOUND, retrying...`);
-    }
-    throw new Error(`[EmailCacheModule] Failed to decode a Modern VIN after ${maxAttempts} attempts`);
+  private decodeFreshModernVin(s: PreviewSession): Promise<string> {
+    return s.flow.openFreshModernVin('vhr');
   }
 
   private readCachedEmail(s: PreviewSession): Promise<string | null> {

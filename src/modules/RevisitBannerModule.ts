@@ -1,5 +1,5 @@
 import { Browser, expect, Page } from '@playwright/test';
-import { ENV } from '../config/env';
+import { BrowserSession } from '../utils/BrowserSession';
 import { HomePage, RevisitBannerSnapshot } from '../pages/home';
 import { PreviewPage, PreviewType } from '../pages/preview';
 import { SelectedYmmt } from '../pages/preview/EditYmmModalComponent';
@@ -73,24 +73,7 @@ export class RevisitBannerModule {
    */
   async verifyModernRevisitBanner(): Promise<ModernRevisitResult> {
     const previewType: PreviewType = Math.random() < 0.5 ? 'vhr' : 'sticker';
-    const maxAttempts = 4;
-    let decodedVin = '';
-
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      const candidate = await VinGenerator.modernFromMongo();
-      await this.previewPage.openDirectly(candidate, previewType);
-      const outcome = await this.previewCheckoutModule.waitForLocalizedDecodeOutcome();
-      if (outcome === 'DECODED') {
-        decodedVin = candidate;
-        this.logger.pass(`Decoded Modern VIN ${decodedVin} (${previewType}, attempt ${attempt})`);
-        break;
-      }
-      this.logger.warn(`Attempt ${attempt}/${maxAttempts}: Modern VIN ${candidate} returned NOT_FOUND, retrying...`);
-    }
-
-    if (!decodedVin) {
-      throw new Error(`[RevisitBannerModule] Failed to decode a Modern VIN (${previewType}) in ${maxAttempts} attempts`);
-    }
+    const decodedVin = await this.previewCheckoutModule.openFreshModernVin(previewType);
 
     await expect(this.previewPage.header.packageAccessCta()).toBeEnabled();
     const vehicleTitle = await this.previewPage.getVehicleTitle();
@@ -124,14 +107,7 @@ export class RevisitBannerModule {
    * the updated YMMT, clicks Grab, and verifies content=revisitingBanner in Preview URL.
    */
   async verifyClassicEditYmmtRevisitBanner(): Promise<ClassicEditYmmtRevisitResult> {
-    const context = await this.browser.newContext({
-      baseURL: ENV.baseURL,
-      viewport: { width: 1280, height: 720 },
-      locale: 'en-US',
-    });
-    await context.addInitScript(() => {
-      Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-    });
+    const context = await BrowserSession.newContext(this.browser);
 
     try {
       const classicPage = await context.newPage();

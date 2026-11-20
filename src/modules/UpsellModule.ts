@@ -66,18 +66,7 @@ export class UpsellModule {
       return vin;
     }
 
-    const maxAttempts = 4;
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      const vin = await VinGenerator.modernFromMongo();
-      await this.previewPage.openDirectly(vin, 'vhr');
-      const outcome = await this.previewCheckoutModule.waitForLocalizedDecodeOutcome();
-      if (outcome === 'DECODED') {
-        this.logger.pass(`Decoded ${kind} VIN ${vin} cleanly (attempt ${attempt})`);
-        return vin;
-      }
-      this.logger.warn(`Attempt ${attempt}/${maxAttempts}: ${kind} VIN ${vin} fell back; trying another VIN...`);
-    }
-    throw new Error(`[UpsellModule] Failed to decode a ${kind} VIN in ${maxAttempts} attempts`);
+    return this.previewCheckoutModule.openFreshModernVin('vhr');
   }
 
   private async waitForDecodeOnCurrentType(kind: VehicleKind, vin: string): Promise<void> {

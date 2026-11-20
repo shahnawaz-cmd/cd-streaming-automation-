@@ -1,10 +1,9 @@
 import { Browser, expect, Page } from '@playwright/test';
-import { ENV } from '../config/env';
 import { PreviewPage, PreviewType } from '../pages/preview/PreviewPage';
 import { PlanOptionInfo } from '../pages/preview/PlansComponent';
 import { PreviewCheckoutModule } from './PreviewCheckoutModule';
-import { VinGenerator } from '../data/VinGenerator';
 import { PriceParser } from '../utils/PriceParser';
+import { BrowserSession } from '../utils/BrowserSession';
 import { Logger } from '../utils/Logger';
 
 export interface PlanSaveCheckItem {
@@ -64,19 +63,9 @@ export class PlansSaveTagModule {
   ) {}
 
   private async decodeFreshModernVin(previewType: PreviewType): Promise<string> {
-    const maxAttempts = 4;
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      const vin = await VinGenerator.modernFromMongo();
-      await this.previewPage.openDirectly(vin, previewType);
-      const outcome = await this.previewCheckoutModule.waitForLocalizedDecodeOutcome();
-      if (outcome === 'DECODED') {
-        await expect(this.previewPage.header.packageAccessCta()).toBeEnabled();
-        this.logger.pass(`Decoded Modern VIN ${vin} (${previewType}, attempt ${attempt})`);
-        return vin;
-      }
-      this.logger.warn(`Attempt ${attempt}/${maxAttempts}: Modern VIN ${vin} returned NOT_FOUND, retrying...`);
-    }
-    throw new Error(`[PlansSaveTagModule] Failed to decode Modern VIN (${previewType}) in ${maxAttempts} attempts`);
+    const vin = await this.previewCheckoutModule.openFreshModernVin(previewType);
+    await expect(this.previewPage.header.packageAccessCta()).toBeEnabled();
+    return vin;
   }
 
   private async waitForPlansReady(targetPreview: PreviewPage): Promise<void> {
@@ -214,17 +203,7 @@ export class PlansSaveTagModule {
     const { baseNonSub, baseSubs, singleBase, baseRetailUnit, baselineCurrency } =
       this.validateBaselinePlans(previewType, basePlans, baseSub.maxSavePercent);
 
-    const context = await this.browser.newContext({
-      baseURL: ENV.baseURL,
-      viewport: { width: 1280, height: 720 },
-      locale: 'en-US',
-      timezoneId: 'America/New_York',
-      userAgent:
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
-    });
-    await context.addInitScript(() => {
-      Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-    });
+    const context = await BrowserSession.newContext(this.browser);
 
     try {
       const couponPage = await context.newPage();

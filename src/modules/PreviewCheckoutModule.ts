@@ -1,7 +1,8 @@
 import { expect, Page } from '@playwright/test';
-import { PreviewPage } from '../pages/preview/PreviewPage';
+import { PreviewPage, PreviewType } from '../pages/preview/PreviewPage';
 import { CheckoutPage } from '../pages/CheckoutPage';
 import { EmailGenerator } from '../data/EmailGenerator';
+import { VinGenerator } from '../data/VinGenerator';
 import { Logger } from '../utils/Logger';
 
 export type LocalizedDecodeOutcome = 'DECODED' | 'NOT_FOUND';
@@ -41,6 +42,33 @@ export class PreviewCheckoutModule {
 
     this.logger.info(`Localized decode outcome resolved: ${outcome}`);
     return outcome;
+  }
+
+  /**
+   * Shared retry loop: pulls a fresh MongoDB Modern VIN, opens it via `open`, and retries on NOT_FOUND.
+   * `open(vin, attempt)` decides how the VIN is loaded (direct URL, homepage form, localized page...).
+   */
+  async decodeFreshModernVin(
+    open: (vin: string, attempt: number) => Promise<void>,
+    maxAttempts = 4
+  ): Promise<string> {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const vin = await VinGenerator.modernFromMongo();
+      await open(vin, attempt);
+      if ((await this.waitForLocalizedDecodeOutcome()) === 'DECODED') {
+        this.logger.pass(`Decoded Modern VIN ${vin} (attempt ${attempt})`);
+        return vin;
+      }
+      this.logger.warn(`Attempt ${attempt}/${maxAttempts}: Modern VIN ${vin} returned NOT_FOUND, retrying...`);
+    }
+    throw new Error(`[PreviewCheckoutModule] Failed to decode a Modern VIN after ${maxAttempts} attempts`);
+  }
+
+  /**
+   * Convenience: decodes a fresh Modern VIN by opening Preview directly with the given type.
+   */
+  openFreshModernVin(previewType: PreviewType = 'vhr', maxAttempts = 4): Promise<string> {
+    return this.decodeFreshModernVin((vin) => this.previewPage.openDirectly(vin, previewType), maxAttempts);
   }
 
   /**

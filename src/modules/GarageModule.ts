@@ -5,7 +5,6 @@ import { VinDecodeModule } from './VinDecodeModule';
 import { PreviewCheckoutModule } from './PreviewCheckoutModule';
 import type { EvidenceModule } from './EvidenceModule';
 import { GarageCredentialsGenerator, GarageUserCredentials } from '../data/GarageCredentialsGenerator';
-import { VinGenerator } from '../data/VinGenerator';
 import { Logger } from '../utils/Logger';
 
 export interface GarageApiVehicle {
@@ -131,23 +130,11 @@ export class GarageModule {
     };
   }
 
-  private async decodeFreshModernVin(useDirectUrl = false): Promise<string> {
-    const maxAttempts = 3;
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      const vin = await VinGenerator.modernFromMongo();
-      if (useDirectUrl) {
-        await this.vinDecodeModule.decodeDirectly(vin);
-      } else {
-        await this.vinDecodeModule.decodeFromHomepage(vin);
-      }
-      const outcome = await this.previewCheckoutModule.waitForLocalizedDecodeOutcome();
-      if (outcome === 'DECODED') {
-        this.logger.pass(`Decoded Modern VIN ${vin} cleanly on Preview (attempt ${attempt})`);
-        return vin;
-      }
-      this.logger.warn(`Attempt ${attempt}/${maxAttempts}: Modern VIN ${vin} returned NOT_FOUND, retrying...`);
-    }
-    throw new Error(`[GarageModule] Failed to obtain a decoded Modern VIN after ${maxAttempts} attempts`);
+  private decodeFreshModernVin(useDirectUrl = false): Promise<string> {
+    return this.previewCheckoutModule.decodeFreshModernVin(
+      (vin) => (useDirectUrl ? this.vinDecodeModule.decodeDirectly(vin) : this.vinDecodeModule.decodeFromHomepage(vin)),
+      3
+    );
   }
 
   /**

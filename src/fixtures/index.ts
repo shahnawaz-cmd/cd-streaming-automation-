@@ -1,5 +1,6 @@
 import { test as base, expect } from '@playwright/test';
 import { HomePage, PreviewPage, CheckoutPage, CdmaGaragePage } from '../pages';
+import { BrowserSession } from '../utils/BrowserSession';
 import {
   VinDecodeModule,
   FlowDetectionModule,
@@ -51,11 +52,7 @@ export type EnterpriseFixtures = {
 export const test = base.extend<EnterpriseFixtures>({
   page: async ({ page }, use) => {
     // Strip automation bot tag / webdriver signature
-    await page.addInitScript(() => {
-      Object.defineProperty(navigator, 'webdriver', {
-        get: () => undefined,
-      });
-    });
+    await page.addInitScript(BrowserSession.stripWebdriver);
 
     await use(page);
   },

@@ -52,6 +52,7 @@ test.describe('CD Streaming - Preview & Checkout', () => {
   });
 
   test('TC-08: Multi-Language Localization - Dynamic random language, Modern VIN decode, Preview & Checkout validation', async ({ languageModule }, testInfo) => {
+    test.slow(); // live decode & multi-session flows: native 3x timeout when the site is slow
     const locale = await test.step('Select random language via Switcher', () => languageModule.selectRandomLanguage());
     const vin = await test.step(`Decode Modern VIN in ${locale.code.toUpperCase()}`, () => languageModule.decodeModernVinInActiveLocale(locale));
     await test.step('Validate Preview localization & attach JSON', () => languageModule.verifyAndRecordPreviewLocalized(testInfo, vin, locale));
@@ -66,30 +67,35 @@ test.describe('CD Streaming - Preview & Checkout', () => {
   });
 
   test('TC-10: Add to Garage (Signup & Login) - Auto-navigation to CDMA My Garage with persisted vehicles', async ({ garageModule }, testInfo) => {
+    test.slow(); // live decode & multi-session flows: native 3x timeout when the site is slow
     const signupCtx = await test.step('Signup via Add to Garage & verify default CDMA auto-navigation', () => garageModule.addVehicleViaSignupAndVerifyCdma());
     const loginResult = await test.step('Login via Add to Garage & verify both vehicles in CDMA', () => garageModule.addVehicleViaLoginAndVerifyCdma(signupCtx));
     await test.step('Capture CDMA screenshot, attach Garage API proof & close browser', () => garageModule.recordGarageCdmaProof(testInfo, signupCtx.result, loginResult));
   });
 
   test('TC-11: Upsell GIF & Site Settings Alignment - Modern vs Classic across VHR & Sticker', async ({ siteSettingsModule, upsellModule, evidenceModule }, testInfo) => {
+    test.slow(); // live decode & multi-session flows: native 3x timeout when the site is slow
     const siteSettings = await test.step('Resolve live site_settings upsell copy keys', () => siteSettingsModule.resolveSiteSettings());
     const matrix = await test.step('Verify Classic vs Modern upsell GIFs, text alignment & toggle sync', () => upsellModule.verifyModernVsClassicMatrix(siteSettings));
     await test.step('Attach Upsell GIF & site_settings JSON telemetry', () => evidenceModule.recordUpsellMatrixProof(testInfo, matrix));
   });
 
   test('TC-12: Plan Selection, Upsell Toggle & Checkout Price Sync (Currency-Agnostic)', async ({ planSelectionModule, checkoutPriceSyncModule, evidenceModule }, testInfo) => {
+    test.slow(); // live decode & multi-session flows: native 3x timeout when the site is slow
     const selection = await test.step('Select non-default plan & enable upsell on Preview', () => planSelectionModule.selectPlanAndEnableUpsell('vhr'));
     const checkoutSync = await test.step('Verify separate Checkout Order Summary & Pay CTA price sync', () => checkoutPriceSyncModule.proceedAndVerifyPriceSync(selection));
     await test.step('Attach Plan & Checkout Price Sync JSON telemetry', () => evidenceModule.recordPlanCheckoutPriceSyncProof(testInfo, selection, checkoutSync));
   });
 
   test('TC-13: Revisit Banner - Modern type sync & Classic updated YMMT in new session', async ({ revisitBannerModule, evidenceModule }, testInfo) => {
+    test.slow(); // live decode & multi-session flows: native 3x timeout when the site is slow
     const modern = await test.step('Modern VIN decode -> Home Revisit Banner -> Grab CTA -> Preview', () => revisitBannerModule.verifyModernRevisitBanner());
     const classic = await test.step('New session Classic VIN -> Edit YMMT -> Home Revisit Banner -> Grab CTA -> Preview', () => revisitBannerModule.verifyClassicEditYmmtRevisitBanner());
     await test.step('Attach Revisit Banner JSON telemetry', () => evidenceModule.recordRevisitBannerProof(testInfo, modern, classic));
   });
 
   test('TC-14: Plans "Save %" Tag Logic - Dynamic prices, currency & compounded Save % (Without vs. With Coupon)', async ({ plansSaveTagModule, evidenceModule }, testInfo) => {
+    test.slow(); // live decode & multi-session flows: native 3x timeout when the site is slow
     const result = await test.step('Verify dynamic Save % tags, prices & CTA sync (Without vs. With Coupon across VHR & Sticker)', () =>
       plansSaveTagModule.verifyPlansSaveTagMatrix()
     );

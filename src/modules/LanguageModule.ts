@@ -7,7 +7,6 @@ import { PreviewCheckoutModule } from './PreviewCheckoutModule';
 import { VinDecodeModule } from './VinDecodeModule';
 import { EvidenceModule } from './EvidenceModule';
 import { SupportedLocale } from '../data/LocaleDictionary';
-import { VinGenerator } from '../data/VinGenerator';
 import { Logger } from '../utils/Logger';
 
 /**
@@ -48,31 +47,14 @@ export class LanguageModule {
    * and verifies streaming decode completes cleanly (retrying up to 3 VINs on Not-Found).
    */
   async decodeModernVinInActiveLocale(locale: SupportedLocale): Promise<string> {
-    const maxAttempts = 3;
-    let activeVin = '';
-
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      activeVin = await VinGenerator.modernFromMongo();
-      await this.vinDecodeModule.submitVinOnCurrentPage(activeVin);
-      const outcome = await this.previewCheckoutModule.waitForLocalizedDecodeOutcome();
-
-      if (outcome === 'DECODED') {
-        this.logger.pass(`Decoded Modern VIN ${activeVin} cleanly in locale ${locale.code.toUpperCase()}`);
-        return activeVin;
-      }
-
-      this.logger.warn(
-        `Attempt ${attempt}/${maxAttempts}: Modern VIN ${activeVin} returned NOT_FOUND in ${locale.code.toUpperCase()}; retrying on localized homepage...`
-      );
-      if (attempt < maxAttempts) {
-        const localeHome = locale.code === 'en' ? '/' : `/${locale.code}`;
-        await this.page.goto(localeHome, { waitUntil: 'networkidle' });
-      }
-    }
-
-    throw new Error(
-      `[LanguageModule] Failed to decode a Modern VIN in ${maxAttempts} attempts under locale "${locale.code}"`
-    );
+    const localeHome = locale.code === 'en' ? '/' : `/${locale.code}`;
+    const vin = await this.previewCheckoutModule.decodeFreshModernVin(async (candidate, attempt) => {
+      // Retries restart from the localized homepage (first attempt submits on the page already open)
+      if (attempt > 1) await this.page.goto(localeHome, { waitUntil: 'networkidle' });
+      await this.vinDecodeModule.submitVinOnCurrentPage(candidate);
+    }, 3);
+    this.logger.pass(`Decoded Modern VIN ${vin} cleanly in locale ${locale.code.toUpperCase()}`);
+    return vin;
   }
 
   /**
