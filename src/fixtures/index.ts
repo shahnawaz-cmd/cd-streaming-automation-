@@ -30,6 +30,7 @@ import {
   PricingFaqModule,
   PricingRegionalCurrencyModule,
   RegionalPreviewCurrencyModule,
+  CheckoutE2EModule,
 } from '../modules';
 
 export type EnterpriseFixtures = {
@@ -67,6 +68,7 @@ export type EnterpriseFixtures = {
   pricingFaqModule: PricingFaqModule;
   pricingRegionalCurrencyModule: PricingRegionalCurrencyModule;
   regionalPreviewCurrencyModule: RegionalPreviewCurrencyModule;
+  checkoutE2EModule: CheckoutE2EModule;
 };
 
 export const test = base.extend<EnterpriseFixtures>({
@@ -221,6 +223,22 @@ export const test = base.extend<EnterpriseFixtures>({
 
   clarityModule: async ({ browser }, use) => {
     await use(new ClarityModule(browser));
+  },
+
+  checkoutE2EModule: async (
+    { page, vinDecodeModule, previewPage, previewCheckoutModule, checkoutPage, cdmaSearchPage },
+    use
+  ) => {
+    await use(
+      new CheckoutE2EModule(
+        page,
+        vinDecodeModule,
+        previewPage,
+        previewCheckoutModule,
+        checkoutPage,
+        cdmaSearchPage
+      )
+    );
   },
 });
 

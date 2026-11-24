@@ -24,7 +24,7 @@ export type AnyDecodeOutcome = ModernDecodeOutcome | ClassicDecodeOutcome;
  */
 export class EvidenceModule {
   /** "TC-07: Edit..." -> "TC-07", "TC-PRICING-01: Pricing..." -> "TC-PRICING-01". */
-  private static testId(testInfo: TestInfo): string {
+  static testId(testInfo: TestInfo): string {
     return testInfo.title.match(/^(TC-[A-Za-z0-9-]+?)\s*:/)?.[1] ?? testInfo.title.slice(0, 5);
   }
 
