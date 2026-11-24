@@ -1,4 +1,5 @@
 export { BasePage } from './BasePage';
+export { BuildSheetPage } from './BuildSheetPage';
 export { CheckoutPage } from './CheckoutPage';
 export * from './pricing';
 export { CdmaGaragePage, CdmaGarageSummary } from './cdma/CdmaGaragePage';

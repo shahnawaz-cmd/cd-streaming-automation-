@@ -68,7 +68,10 @@ export class CdmaSearchPage extends BasePage {
    * Waits natively for the app's post-payment auto-navigation into CDMA (/members/...)
    * and verifies the purchased VIN and generation UI without manual goto().
    */
-  async waitForVinPurchaseAutoNavigation(vin: string): Promise<CdmaVinPurchaseLanding> {
+  async waitForVinPurchaseAutoNavigation(
+    vin: string,
+    expectedType?: 'vhr' | 'sticker'
+  ): Promise<CdmaVinPurchaseLanding> {
     await this.page.waitForURL(/\/members\//);
     await expect(
       this.reportGenerationDialog().or(this.memberNavShell()).or(this.reportCreditsLabel()).first()
@@ -89,6 +92,9 @@ export class CdmaSearchPage extends BasePage {
       expect(queryParams.vin, 'CDMA /members/search query param vin').toBe(vin);
       expect(queryParams.paid, 'CDMA /members/search query param paid').toBe('true');
       expect(queryParams.generate, 'CDMA /members/search query param generate').toBe('true');
+      if (expectedType && queryParams.type) {
+        expect(queryParams.type, 'CDMA /members/search query param type').toBe(expectedType);
+      }
     }
 
     const dialog = this.reportGenerationDialog();

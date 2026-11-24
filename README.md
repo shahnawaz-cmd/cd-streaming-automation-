@@ -16,7 +16,7 @@ CD Streaming Framework
 ├── Layer 4: Test Data         (src/data/)       - MongoDB live VIN pool, Classic VIN generator, Anti-bounce emails, Stripe test card & regional (geo) pool
 ├── Layer 5: Utilities         (src/utils/)      - Self-healing locator agent, isolated browser sessions, plans-API client, Stripe capture, price parser & structured logging
 ├── Layer 6: Fixtures          (src/fixtures/)   - Dependency injection & bot fingerprint stripping
-├── Layer 7: Test Specs        (tests/)          - `cd-streaming.spec.ts` (TC-01..TC-19), `pricing.spec.ts` (TC-PRICING-01..06), & `checkout-e2e.spec.ts` (TC-E2E-01)
+├── Layer 7: Test Specs        (tests/)          - `cd-streaming.spec.ts` (TC-01..TC-19), `pricing.spec.ts` (TC-PRICING-01..06), & `checkout-e2e.spec.ts` (TC-E2E-01..02)
 └── Layer 8: Evidence          (src/modules/)    - Focused element snapshots (~25 KB) & JSON telemetry (1 KB)
 ```
 
@@ -81,6 +81,7 @@ CD Streaming Framework
 | **TC-PRICING-05** | Pricing FAQ & Sample Report | All FAQ items expand (non-empty answer) and collapse; sample report link opens `/sample-reports` in a new tab | Live site |
 | **TC-PRICING-06** | Regional Currency | `cwa_ip`/`cwa_country` cookies for a random region (9-region pool, `PRICING_REGION=DE` to pin): API currency, `usd_price x rate` and the amount on the card all agree | `RegionalPool` |
 | **TC-E2E-01** | Modern VIN Checkout E2E (`tests/checkout-e2e.spec.ts`) | Homepage Modern VIN decode ➔ Preview ➔ Checkout ➔ Stripe test-card payment ➔ Stripe confirm & `/api/update-payment` capture ➔ Default CDMA auto-navigation (`/members/...`) | Live MongoDB Pool, Stripe test card |
+| **TC-E2E-02** | Modern VIN Build Sheet Checkout E2E (`tests/checkout-e2e.spec.ts`) | `/build-sheet` Modern VIN decode ➔ Preview (`type=sticker`) ➔ Checkout ➔ Stripe test-card payment ➔ Stripe confirm & `/api/update-payment` capture ➔ Default CDMA auto-navigation (`/members/...`) | Live MongoDB Pool, Stripe test card |
 
 ---
 
@@ -130,7 +131,7 @@ npx playwright test -g "TC-02"
 npx playwright test -g "TC-03"
 npx playwright test -g "TC-1[5-7]"   # email cache, referrer/UTM cookies, dual coupon
 npx playwright test tests/pricing.spec.ts   # independent Pricing suite (purchase, coupon, API parity, tabs, FAQ, regional currency)
-npx playwright test tests/checkout-e2e.spec.ts   # Modern VIN Homepage -> Preview -> Checkout -> Stripe -> CDMA E2E suite
+npx playwright test tests/checkout-e2e.spec.ts   # Modern VIN Report ('/') & Build Sheet ('/build-sheet') -> Checkout -> Stripe -> CDMA E2E suite
 npx playwright test -g "TC-19"             # regional currency on Preview (random region)
 npx playwright test -g "TC-PRICING-06"     # regional currency on /pricing (random region)
 $env:PRICING_REGION="DE"; npx playwright test -g "TC-19"   # pin a region (TC-19 or TC-PRICING-06)

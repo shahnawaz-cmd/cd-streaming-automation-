@@ -1,5 +1,5 @@
 import { test as base, expect } from '@playwright/test';
-import { HomePage, PreviewPage, CheckoutPage, CdmaGaragePage, PricingPage, CdmaSearchPage } from '../pages';
+import { HomePage, BuildSheetPage, PreviewPage, CheckoutPage, CdmaGaragePage, PricingPage, CdmaSearchPage } from '../pages';
 import { BrowserSession } from '../utils/BrowserSession';
 import {
   VinDecodeModule,
@@ -35,6 +35,7 @@ import {
 
 export type EnterpriseFixtures = {
   homePage: HomePage;
+  buildSheetPage: BuildSheetPage;
   previewPage: PreviewPage;
   checkoutPage: CheckoutPage;
   cdmaGaragePage: CdmaGaragePage;
@@ -81,6 +82,10 @@ export const test = base.extend<EnterpriseFixtures>({
 
   homePage: async ({ page }, use) => {
     await use(new HomePage(page));
+  },
+
+  buildSheetPage: async ({ page }, use) => {
+    await use(new BuildSheetPage(page));
   },
 
   previewPage: async ({ page }, use) => {
@@ -226,13 +231,14 @@ export const test = base.extend<EnterpriseFixtures>({
   },
 
   checkoutE2EModule: async (
-    { page, vinDecodeModule, previewPage, previewCheckoutModule, checkoutPage, cdmaSearchPage },
+    { page, vinDecodeModule, buildSheetPage, previewPage, previewCheckoutModule, checkoutPage, cdmaSearchPage },
     use
   ) => {
     await use(
       new CheckoutE2EModule(
         page,
         vinDecodeModule,
+        buildSheetPage,
         previewPage,
         previewCheckoutModule,
         checkoutPage,

@@ -1,6 +1,7 @@
 import { expect, Frame, Page, TestInfo } from '@playwright/test';
+import { BuildSheetPage } from '../pages/BuildSheetPage';
 import { CheckoutDecodedPayload, CheckoutPage } from '../pages/CheckoutPage';
-import { PreviewPage } from '../pages/preview/PreviewPage';
+import { PreviewPage, PreviewType } from '../pages/preview/PreviewPage';
 import { ExitIntentModalComponent } from '../pages/preview/ExitIntentModalComponent';
 import { CdmaSearchPage, CdmaVinPurchaseLanding } from '../pages/cdma/CdmaSearchPage';
 import { VinDecodeModule } from './VinDecodeModule';
@@ -17,6 +18,8 @@ import {
 import { Logger } from '../utils/Logger';
 
 export interface ModernVinCheckoutE2EResult {
+  entryPath: '/' | '/build-sheet';
+  previewType: PreviewType;
   vin: string;
   vehicleTitle: string;
   email: string;
@@ -38,10 +41,19 @@ export interface ModernVinCheckoutE2EResult {
   cdmaLanding: CdmaVinPurchaseLanding;
 }
 
+interface CheckoutFlowConfig {
+  entryPath: '/' | '/build-sheet';
+  previewType: PreviewType;
+  expectedCheckoutType: 'report' | 'sticker';
+  summaryItemPattern: (count: number) => RegExp;
+  decode: (vin: string) => Promise<void>;
+}
+
 /**
  * Layer 3: CheckoutE2EModule
- * End-to-end streaming purchase flow:
- * Homepage Modern VIN Decode -> Preview -> Checkout -> Stripe Test Card Payment -> Default CDMA Auto-Navigation.
+ * End-to-end streaming purchase flows:
+ * - Homepage ('/') Modern VIN Decode -> Preview (vhr) -> Checkout -> Stripe Payment -> CDMA Auto-Navigation
+ * - Build Sheet ('/build-sheet') Modern VIN Decode -> Preview (sticker) -> Checkout -> Stripe Payment -> CDMA Auto-Navigation
  */
 export class CheckoutE2EModule {
   private logger = new Logger('CheckoutE2EModule');
@@ -49,20 +61,18 @@ export class CheckoutE2EModule {
   constructor(
     private page: Page,
     private vinDecodeModule: VinDecodeModule,
+    private buildSheetPage: BuildSheetPage,
     private previewPage: PreviewPage,
     private previewCheckoutModule: PreviewCheckoutModule,
     private checkoutPage: CheckoutPage,
     private cdmaSearchPage: CdmaSearchPage
   ) {}
 
-  /**
-   * Decodes a fresh Modern VIN from the homepage, transitions through Checkout,
-   * pays via Stripe test card in test mode, and verifies default CDMA auto-navigation.
-   */
-  async runModernVinStripeCheckoutToCdma(testInfo?: TestInfo): Promise<ModernVinCheckoutE2EResult> {
-    const vin = await this.previewCheckoutModule.decodeFreshModernVin((candidate) =>
-      this.vinDecodeModule.decodeFromHomepage(candidate)
-    );
+  private async runModernVinCheckoutFlow(
+    config: CheckoutFlowConfig,
+    testInfo?: TestInfo
+  ): Promise<ModernVinCheckoutE2EResult> {
+    const vin = await this.previewCheckoutModule.decodeFreshModernVin(config.decode);
     await expect(this.previewPage.header.packageAccessCta()).toBeEnabled();
 
     const vehicleTitle = await this.previewPage.getVehicleTitle();
@@ -79,7 +89,7 @@ export class CheckoutE2EModule {
     expect(payload, 'Checkout decoded payload should be present').not.toBeNull();
     expect(payload?.vin, 'Checkout payload VIN').toBe(vin);
     expect(payload?.email, 'Checkout payload email').toBe(email);
-    expect(payload?.type, 'Checkout payload product type').toBe('report');
+    expect(payload?.type, 'Checkout payload product type').toBe(config.expectedCheckoutType);
     expect(payload?.nos, 'Checkout payload plan count').toBe(selectedPlan.count);
     if (typeof payload?.price === 'number') {
       PriceParser.assertAmountClose(payload.price, selectedPlan.totalAmount, 'Checkout payload price');
@@ -88,8 +98,8 @@ export class CheckoutE2EModule {
     await expect(this.checkoutPage.orderSummarySection()).toBeVisible();
     const summaryText = (await this.checkoutPage.orderSummarySection().innerText()).replace(/\s+/g, ' ').trim();
     expect(summaryText, 'Checkout Order Summary contains VIN').toContain(vin);
-    expect(summaryText, 'Checkout Order Summary contains plan report count').toMatch(
-      new RegExp(`${selectedPlan.count}\\s+Reports?`, 'i')
+    expect(summaryText, 'Checkout Order Summary matches selected package').toMatch(
+      config.summaryItemPattern(selectedPlan.count)
     );
 
     await expect(this.checkoutPage.payButton()).toBeVisible();
@@ -130,7 +140,10 @@ export class CheckoutE2EModule {
       StripePaymentCapture.assertStripeConfirm(stripeConfirm, selectedPlan.totalAmount, payload?.currency);
       StripePaymentCapture.assertUpdatePayment(updatePayment, email, { expectedVin: vin });
 
-      const cdmaLanding = await this.cdmaSearchPage.waitForVinPurchaseAutoNavigation(vin);
+      const cdmaLanding = await this.cdmaSearchPage.waitForVinPurchaseAutoNavigation(
+        vin,
+        config.previewType
+      );
       if (testInfo) {
         const testId = EvidenceModule.testId(testInfo);
         const screenshot = await this.page.screenshot();
@@ -141,10 +154,12 @@ export class CheckoutE2EModule {
       }
 
       this.logger.pass(
-        `Checkout E2E passed for VIN ${vin} (${email}) -> Stripe ${stripeConfirm.paymentIntentId} -> CDMA ${cdmaLanding.pathname}`
+        `Checkout E2E (${config.entryPath} -> ${config.previewType}) passed for VIN ${vin} (${email}) -> Stripe ${stripeConfirm.paymentIntentId} -> CDMA ${cdmaLanding.pathname}`
       );
 
       return {
+        entryPath: config.entryPath,
+        previewType: config.previewType,
         vin,
         vehicleTitle,
         email,
@@ -162,5 +177,34 @@ export class CheckoutE2EModule {
     } finally {
       this.page.off('framenavigated', onFrameNavigated);
     }
+  }
+
+  /** Report (VHR) Checkout E2E from homepage '/'. */
+  runModernVinStripeCheckoutToCdma(testInfo?: TestInfo): Promise<ModernVinCheckoutE2EResult> {
+    return this.runModernVinCheckoutFlow(
+      {
+        entryPath: '/',
+        previewType: 'vhr',
+        expectedCheckoutType: 'report',
+        summaryItemPattern: (count) => new RegExp(`${count}\\s+Reports?`, 'i'),
+        decode: (vin) => this.vinDecodeModule.decodeFromHomepage(vin),
+      },
+      testInfo
+    );
+  }
+
+  /** Build Sheet (Sticker) Checkout E2E from '/build-sheet'. */
+  runModernVinBuildSheetCheckoutToCdma(testInfo?: TestInfo): Promise<ModernVinCheckoutE2EResult> {
+    return this.runModernVinCheckoutFlow(
+      {
+        entryPath: '/build-sheet',
+        previewType: 'sticker',
+        expectedCheckoutType: 'sticker',
+        summaryItemPattern: (count) =>
+          new RegExp(`${count}\\s+(?:Build\\s+Sheets?|Window\\s+Stickers?|Stickers?)`, 'i'),
+        decode: (vin) => this.buildSheetPage.submitVinAndWaitForPreview(vin),
+      },
+      testInfo
+    );
   }
 }

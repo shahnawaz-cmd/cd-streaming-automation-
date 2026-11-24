@@ -22,6 +22,7 @@ export interface UpdatePaymentProof {
   page: string;
   vin: string;
   vhrCredit: number;
+  stickerCredit: number;
   user: { id: string; email: string; country: string };
 }
 
@@ -72,6 +73,7 @@ export class StripePaymentCapture {
           page: body.data?.page,
           vin: body.data?.vin,
           vhrCredit: Number(body.data?.vhr_credit ?? 0),
+          stickerCredit: Number(body.data?.sticker_credit ?? 0),
           user: { id, email, country },
         };
       });
@@ -114,12 +116,12 @@ export class StripePaymentCapture {
   }
 
   /**
-   * Asserts `/api/update-payment` completed cleanly for the expected user (and optional VIN/credit).
+   * Asserts `/api/update-payment` completed cleanly for the expected user (and optional VIN/credits).
    */
   static assertUpdatePayment(
     proof: UpdatePaymentProof,
     expectedEmail: string,
-    options?: { expectedVin?: string; expectedVhrCredit?: number }
+    options?: { expectedVin?: string; expectedVhrCredit?: number; expectedStickerCredit?: number }
   ): void {
     expect(proof.httpStatus, 'update-payment HTTP status').toBe(200);
     expect(proof.status, 'update-payment status').toBe('success');
@@ -129,6 +131,11 @@ export class StripePaymentCapture {
     }
     if (options?.expectedVhrCredit !== undefined) {
       expect(proof.vhrCredit, 'update-payment Report Credits').toBe(options.expectedVhrCredit);
+    }
+    if (options?.expectedStickerCredit !== undefined) {
+      expect(proof.stickerCredit, 'update-payment Build Sheet Credits').toBe(
+        options.expectedStickerCredit
+      );
     }
   }
 }
