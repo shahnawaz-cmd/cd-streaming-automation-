@@ -16,7 +16,9 @@ export interface CheckoutDecodedPayload {
   vin?: string;
   email?: string;
   extra?: boolean;
+  subscription?: boolean;
   nos?: number;
+  itemLabel?: string;
   price?: number;
   addOnPrice?: number;
   addOnLabel?: string;
@@ -73,8 +75,9 @@ export class CheckoutPage extends BasePage {
 
   payButton = (): Locator =>
     this.page
-      .getByRole('button', { name: /^(?:Pay|Complete Order)\b.*\d/i })
-      .or(this.page.locator('button:has-text("Pay")').filter({ hasText: /\d/ }))
+      .getByRole('button', { name: /^(?:Pay|Subscribe|Complete Order)\b.*\d/i })
+      .or(this.page.locator('form button[type="submit"]').filter({ hasText: /\d/ }))
+      .or(this.page.locator('button:has-text("Pay"), button:has-text("Subscribe")').filter({ hasText: /\d/ }))
       .or(this.page.locator('[data-testid="pay-btn"]'))
       .first();
 

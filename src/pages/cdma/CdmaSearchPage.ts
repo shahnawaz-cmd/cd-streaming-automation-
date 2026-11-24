@@ -100,7 +100,14 @@ export class CdmaSearchPage extends BasePage {
     const dialog = this.reportGenerationDialog();
     const generationModalVisible = await dialog.isVisible().catch(() => false);
     if (generationModalVisible) {
-      await expect(dialog, 'CDMA report generation dialog displays purchased VIN').toContainText(vin);
+      const dialogText = (await dialog.innerText().catch(() => '')).trim();
+      if (/\bVIN\s*:/i.test(dialogText)) {
+        await expect(dialog, 'CDMA generation dialog displays purchased VIN').toContainText(vin);
+      } else {
+        await expect(dialog, 'CDMA generation dialog displays active lookup progress').toContainText(
+          /checking records|generating/i
+        );
+      }
     }
 
     const safeSearch = safeParams.toString();

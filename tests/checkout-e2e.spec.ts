@@ -20,4 +20,14 @@ test.describe('Checkout E2E Flows', () => {
       evidenceModule.recordProof(testInfo, 'BuildSheet-Checkout-E2E-Proof', result)
     );
   });
+
+  test('TC-E2E-03: Modern VIN Unlimited Build Sheet Checkout E2E - /build-sheet Decode -> Preview (Unlimited Plan) -> Checkout -> Stripe Payment -> CDMA Auto-Navigation', async ({ checkoutE2EModule, evidenceModule }, testInfo) => {
+    test.slow();
+    const result = await test.step('Decode Modern VIN on /build-sheet -> Select Unlimited Plan -> Checkout -> Stripe Payment -> CDMA Auto-Navigation', () =>
+      checkoutE2EModule.runModernVinUnlimitedBuildSheetCheckoutToCdma(testInfo)
+    );
+    await test.step('Attach Unlimited Build Sheet Checkout E2E JSON telemetry (Stripe & update-payment API proof)', () =>
+      evidenceModule.recordProof(testInfo, 'BuildSheet-Unlimited-Checkout-E2E-Proof', result)
+    );
+  });
 });
