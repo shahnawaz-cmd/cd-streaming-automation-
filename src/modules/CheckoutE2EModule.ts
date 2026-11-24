@@ -41,6 +41,7 @@ export interface ModernVinCheckoutE2EResult {
     planCode?: string;
   } | null;
   cdmaLanding: CdmaVinPurchaseLanding;
+  upsell?: { title: string; price: number; expectedTotal: number };
 }
 
 interface CheckoutFlowConfig {
@@ -48,6 +49,7 @@ interface CheckoutFlowConfig {
   previewType: PreviewType;
   expectedCheckoutType: 'report' | 'sticker';
   expectedSubscription: boolean;
+  withUpsell?: boolean;
   selectPlan?: (plans: PlanOptionInfo[]) => PlanOptionInfo;
   summaryItemPattern: (plan: PlanOptionInfo) => RegExp;
   decode: (vin: string) => Promise<void>;
@@ -104,6 +106,26 @@ export class CheckoutE2EModule {
       }).toPass();
     }
 
+    let expectedTotal = selectedPlan.totalAmount;
+    let upsellInfo: ModernVinCheckoutE2EResult['upsell'];
+    if (config.withUpsell) {
+      const before = await this.previewPage.upsell.readSnapshot();
+      await this.previewPage.upsell.toggleOn();
+      const after = await this.previewPage.upsell.readSnapshot();
+      expect(after.checked, 'Preview upsell checkbox is checked').toBe(true);
+      expectedTotal = selectedPlan.totalAmount + before.activePriceAmount;
+      const cta = this.previewPage.header.packageAccessCta();
+      await expect(async () => {
+        const parsed = PriceParser.parseLastPrice(await cta.innerText());
+        PriceParser.assertAmountClose(
+          parsed.amount,
+          expectedTotal,
+          `Preview CTA after plan "${selectedPlan.label}" + upsell "${after.title}"`
+        );
+      }).toPass();
+      upsellInfo = { title: after.title, price: before.activePriceAmount, expectedTotal };
+    }
+
     const email = EmailGenerator.generateWithTimestamp();
     await ExitIntentModalComponent.runWithOverlayGuard(this.page, () =>
       this.previewCheckoutModule.proceedToCheckoutViaAccessCta(email)
@@ -121,8 +143,11 @@ export class CheckoutE2EModule {
     if (!config.expectedSubscription) {
       expect(payload?.nos, 'Checkout payload plan count').toBe(selectedPlan.count);
     }
+    if (config.withUpsell) {
+      expect(Boolean(payload?.extra), 'Checkout payload extra (upsell) flag').toBe(true);
+    }
     if (typeof payload?.price === 'number') {
-      PriceParser.assertAmountClose(payload.price, selectedPlan.totalAmount, 'Checkout payload price');
+      PriceParser.assertAmountClose(payload.price, selectedPlan.totalAmount, 'Checkout payload price (plan only; upsell flagged via extra)');
     }
 
     await expect(this.checkoutPage.orderSummarySection()).toBeVisible();
@@ -132,11 +157,20 @@ export class CheckoutE2EModule {
       config.summaryItemPattern(selectedPlan)
     );
 
+    if (config.withUpsell && upsellInfo) {
+      expect(summaryText, 'Checkout Order Summary lists the upsell add-on').toMatch(/add-?on/i);
+      PriceParser.assertAmountClose(
+        PriceParser.parseLastPrice(summaryText).amount,
+        expectedTotal,
+        'Checkout Order Summary total (plan + upsell)'
+      );
+    }
+
     await expect(this.checkoutPage.payButton()).toBeVisible();
     await expect(this.checkoutPage.payButton()).toBeEnabled();
     const payButtonText = (await this.checkoutPage.payButton().innerText()).replace(/\s+/g, ' ').trim();
     const parsedPay = PriceParser.parseLastPrice(payButtonText);
-    PriceParser.assertAmountClose(parsedPay.amount, selectedPlan.totalAmount, 'Checkout Pay CTA amount');
+    PriceParser.assertAmountClose(parsedPay.amount, expectedTotal, 'Checkout Pay CTA amount');
     if (selectedPlan.currencyToken && parsedPay.currencyToken) {
       expect(parsedPay.currencyToken, 'Checkout Pay CTA currency matches Preview currency').toBe(
         selectedPlan.currencyToken
@@ -167,7 +201,7 @@ export class CheckoutE2EModule {
       await this.checkoutPage.payWithCard(STRIPE_TEST_CARD);
       const { stripeConfirm, updatePayment } = await paymentCapture.waitForBoth();
 
-      StripePaymentCapture.assertStripeConfirm(stripeConfirm, selectedPlan.totalAmount, payload?.currency);
+      StripePaymentCapture.assertStripeConfirm(stripeConfirm, expectedTotal, payload?.currency);
       StripePaymentCapture.assertUpdatePayment(updatePayment, email, { expectedVin: vin });
 
       const cdmaLanding = await this.cdmaSearchPage.waitForVinPurchaseAutoNavigation(
@@ -184,7 +218,7 @@ export class CheckoutE2EModule {
       }
 
       this.logger.pass(
-        `Checkout E2E (${config.entryPath} -> ${config.previewType}${config.expectedSubscription ? ' subscription' : ''}) passed for VIN ${vin} (${email}) -> Stripe ${stripeConfirm.paymentIntentId} -> CDMA ${cdmaLanding.pathname}`
+        `Checkout E2E (${config.entryPath} -> ${config.previewType}${config.expectedSubscription ? ' subscription' : ''}${config.withUpsell ? ' + upsell' : ''}) passed for VIN ${vin} (${email}) -> Stripe ${stripeConfirm.paymentIntentId} -> CDMA ${cdmaLanding.pathname}`
       );
 
       return {
@@ -204,6 +238,7 @@ export class CheckoutE2EModule {
         updatePayment,
         successPage,
         cdmaLanding,
+        upsell: upsellInfo,
       };
     } finally {
       this.page.off('framenavigated', onFrameNavigated);
@@ -218,6 +253,23 @@ export class CheckoutE2EModule {
         previewType: 'vhr',
         expectedCheckoutType: 'report',
         expectedSubscription: false,
+        summaryItemPattern: (plan) => new RegExp(`${plan.count}\\s+Reports?`, 'i'),
+        decode: (vin) => this.vinDecodeModule.decodeFromHomepage(vin),
+      },
+      testInfo
+    );
+  }
+
+  /** Report (VHR) Checkout E2E from Preview: selected plan + upsell checkbox, then pay. */
+  runModernVinVhrPlanWithUpsellCheckoutToCdma(testInfo?: TestInfo): Promise<ModernVinCheckoutE2EResult> {
+    return this.runModernVinCheckoutFlow(
+      {
+        entryPath: '/',
+        previewType: 'vhr',
+        expectedCheckoutType: 'report',
+        expectedSubscription: false,
+        withUpsell: true,
+        selectPlan: (plans) => plans.find((p) => !p.checked && !p.isSubscription) ?? plans[0],
         summaryItemPattern: (plan) => new RegExp(`${plan.count}\\s+Reports?`, 'i'),
         decode: (vin) => this.vinDecodeModule.decodeFromHomepage(vin),
       },
