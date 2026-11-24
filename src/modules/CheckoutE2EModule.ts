@@ -293,6 +293,24 @@ export class CheckoutE2EModule {
     );
   }
 
+  /** Build Sheet (Sticker) Checkout E2E from Preview: selected plan + upsell checkbox, then pay. */
+  runModernVinStickerPlanWithUpsellCheckoutToCdma(testInfo?: TestInfo): Promise<ModernVinCheckoutE2EResult> {
+    return this.runModernVinCheckoutFlow(
+      {
+        entryPath: '/build-sheet',
+        previewType: 'sticker',
+        expectedCheckoutType: 'sticker',
+        expectedSubscription: false,
+        withUpsell: true,
+        selectPlan: (plans) => plans.find((p) => !p.checked && !p.isSubscription) ?? plans[0],
+        summaryItemPattern: (plan) =>
+          new RegExp(`${plan.count}\\s+(?:Build\\s+Sheets?|Window\\s+Stickers?|Stickers?)`, 'i'),
+        decode: (vin) => this.buildSheetPage.submitVinAndWaitForPreview(vin),
+      },
+      testInfo
+    );
+  }
+
   /** Unlimited/Subscription Build Sheet (Sticker) Checkout E2E from '/build-sheet'. */
   runModernVinUnlimitedBuildSheetCheckoutToCdma(
     testInfo?: TestInfo

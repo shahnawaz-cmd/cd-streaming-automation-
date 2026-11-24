@@ -40,4 +40,14 @@ test.describe('Checkout E2E Flows', () => {
       evidenceModule.recordProof(testInfo, 'Vhr-Upsell-Checkout-E2E-Proof', result)
     );
   });
+
+  test('TC-E2E-05: Modern VIN Build Sheet (type=sticker) Plan + Upsell Checkout E2E - /build-sheet Decode -> Preview (Plan + Upsell) -> Checkout -> Stripe Payment -> CDMA Auto-Navigation', async ({ checkoutE2EModule, evidenceModule }, testInfo) => {
+    test.slow();
+    const result = await test.step('Decode Modern VIN on /build-sheet -> Select Plan + Enable Upsell -> Checkout -> Stripe Payment -> CDMA Auto-Navigation', () =>
+      checkoutE2EModule.runModernVinStickerPlanWithUpsellCheckoutToCdma(testInfo)
+    );
+    await test.step('Attach Sticker Plan + Upsell Checkout E2E JSON telemetry (Stripe & update-payment API proof)', () =>
+      evidenceModule.recordProof(testInfo, 'Sticker-Upsell-Checkout-E2E-Proof', result)
+    );
+  });
 });
