@@ -42,3 +42,4 @@ export { TrackingCookieModule, TrackingCookieResult } from './TrackingCookieModu
 export { DualCouponModule, DualCouponResult } from './DualCouponModule';
 export { EmailCacheModule, EmailCacheScenarioResult, EmailCacheCheck, PREVIEW_EMAIL_CACHE_KEY } from './EmailCacheModule';
 export { CheckoutE2EModule, ModernVinCheckoutE2EResult } from './CheckoutE2EModule';
+export { ContactUsModule } from './ContactUsModule';

@@ -1,5 +1,5 @@
 import { test as base, expect } from '@playwright/test';
-import { HomePage, BuildSheetPage, PreviewPage, CheckoutPage, CdmaGaragePage, PricingPage, CdmaSearchPage } from '../pages';
+import { HomePage, BuildSheetPage, PreviewPage, CheckoutPage, CdmaGaragePage, PricingPage, CdmaSearchPage, ContactUsPage } from '../pages';
 import { BrowserSession } from '../utils/BrowserSession';
 import {
   VinDecodeModule,
@@ -31,6 +31,7 @@ import {
   PricingRegionalCurrencyModule,
   RegionalPreviewCurrencyModule,
   CheckoutE2EModule,
+  ContactUsModule,
 } from '../modules';
 
 export type EnterpriseFixtures = {
@@ -41,6 +42,7 @@ export type EnterpriseFixtures = {
   cdmaGaragePage: CdmaGaragePage;
   pricingPage: PricingPage;
   cdmaSearchPage: CdmaSearchPage;
+  contactUsPage: ContactUsPage;
   vinDecodeModule: VinDecodeModule;
   flowDetectionModule: FlowDetectionModule;
   evidenceModule: EvidenceModule;
@@ -70,6 +72,7 @@ export type EnterpriseFixtures = {
   pricingRegionalCurrencyModule: PricingRegionalCurrencyModule;
   regionalPreviewCurrencyModule: RegionalPreviewCurrencyModule;
   checkoutE2EModule: CheckoutE2EModule;
+  contactUsModule: ContactUsModule;
 };
 
 export const test = base.extend<EnterpriseFixtures>({
@@ -98,6 +101,10 @@ export const test = base.extend<EnterpriseFixtures>({
 
   cdmaGaragePage: async ({ page }, use) => {
     await use(new CdmaGaragePage(page));
+  },
+
+  contactUsPage: async ({ page }, use) => {
+    await use(new ContactUsPage(page));
   },
 
   vinDecodeModule: async ({ page, homePage, previewPage, classicDecodeHandler, evidenceModule }, use) => {
@@ -245,6 +252,10 @@ export const test = base.extend<EnterpriseFixtures>({
         cdmaSearchPage
       )
     );
+  },
+
+  contactUsModule: async ({ page, contactUsPage }, use) => {
+    await use(new ContactUsModule(page, contactUsPage));
   },
 });
 
